@@ -9,13 +9,49 @@ export interface Category {
 export interface Product {
   id: string;
   name: string;
-  price: string;
-  weight: string;
+  price: number;
+  unit: string;
   image_url: string;
   category_id?: string;
   is_featured: boolean;
   description?: string;
+  stock_status: 'instock' | 'outofstock';
   created_at?: string;
+}
+
+export interface Profile {
+  id: string;
+  full_name?: string;
+  avatar_url?: string;
+  is_admin: boolean;
+  phone_number?: string;
+  shipping_address?: string;
+  city?: string;
+  postal_code?: string;
+  created_at?: string;
+}
+
+export interface Order {
+  id: string;
+  customer_id: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  total_amount: number;
+  shipping_address: string;
+  city: string;
+  postal_code: string;
+  contact_phone: string;
+  tracking_number?: string;
+  created_at: string;
+  order_items?: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price_at_purchase: number;
+  product?: Product;
 }
 
 export interface ContactInquiry {

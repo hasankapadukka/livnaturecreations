@@ -193,10 +193,20 @@ const Products = () => {
 };
 
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+
+  const activeWishlist = isInWishlist(product.id);
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id);
+  };
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -250,6 +260,18 @@ const ProductCard = ({ product }: { product: Product }) => {
               </div>
             </div>
           )}
+
+          {/* Wishlist Button */}
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+            <button 
+              onClick={handleWishlist}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-lg border ${
+                activeWishlist ? 'bg-white text-red-500 border-red-100' : 'bg-white/90 text-gray-400 border-transparent hover:text-red-400'
+              }`}
+            >
+              <Heart size={16} fill={activeWishlist ? "currentColor" : "none"} />
+            </button>
+          </div>
         </div>
       </Link>
 

@@ -9,6 +9,7 @@ import Export from './pages/Export';
 import Contact from './pages/Contact';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import Login from './pages/Login';
@@ -17,6 +18,14 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminProducts from './pages/AdminProducts';
 import AdminInquiries from './pages/AdminInquiries';
+import AdminOrders from './pages/AdminOrders';
+import Cart from './pages/Cart';
+import Signup from './pages/Signup';
+import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
+import Orders from './pages/Orders';
+import TrackOrder from './pages/TrackOrder';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Placeholder components for other pages
 const Shop = () => <div className="py-20 text-center text-4xl font-serif">Shop Page Coming Soon</div>;
@@ -40,6 +49,17 @@ function AnimatedRoutes() {
           <Route path="/export" element={<Export />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+        </Route>
+
+        {/* Protected Customer Routes */}
+        <Route element={<ProtectedRoute><Layout><AnimatedRoutesWrapper /></Layout></ProtectedRoute>}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/orders" element={<Orders />} />
         </Route>
 
         {/* Admin Routes (Private) - No Storefront Layout */}
@@ -53,6 +73,7 @@ function AnimatedRoutes() {
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="orders" element={<AdminOrders />} />
                   <Route path="inquiries" element={<AdminInquiries />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Routes>
@@ -74,9 +95,11 @@ export default function App() {
   return (
     <CartProvider>
       <AuthProvider>
-        <Router>
-          <AnimatedRoutes />
-        </Router>
+        <WishlistProvider>
+          <Router>
+            <AnimatedRoutes />
+          </Router>
+        </WishlistProvider>
       </AuthProvider>
     </CartProvider>
   );

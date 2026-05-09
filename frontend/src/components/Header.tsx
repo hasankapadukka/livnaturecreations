@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import CartDrawer from './CartDrawer';
 
+import { useAuth } from '../context/AuthContext';
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartCount } = useCart();
+  const { user } = useAuth();
 
   const tickerItems = [
     "Free shipping on orders above LKR 5,000",
@@ -53,16 +56,20 @@ const Header = () => {
           <button className="hidden sm:block text-gray-800 hover:text-brand-green transition-colors"><Search size={18} strokeWidth={2.5} /></button>
           <Link to="/contact" className="hidden lg:block hover:text-brand-green transition-colors">Contact</Link>
           
-          <button 
-            onClick={() => setIsCartOpen(true)}
+          <Link 
+            to="/cart"
             className="flex bg-brand-dark text-white px-4 py-[10px] rounded-full items-center space-x-2 hover:bg-brand-green transition-all text-[10px] font-bold shadow-sm"
           >
             <ShoppingBag size={14} strokeWidth={2.5} className="mr-1"/>
             <span className="hidden xl:inline">{cartCount} items in cart</span>
             <span className="xl:hidden">{cartCount}</span>
-          </button>
+          </Link>
 
-          <a href="#" className="bg-brand-green text-white px-4 md:px-6 py-[10px] rounded-full hover:bg-brand-dark transition-all transform hover:scale-105 shadow-md text-xs md:text-sm">Sign In</a>
+          {user ? (
+            <Link to="/profile" className="bg-brand-dark text-white px-4 md:px-6 py-[10px] rounded-full hover:bg-brand-green transition-all transform hover:scale-105 shadow-md text-xs md:text-sm uppercase font-bold tracking-widest">My Account</Link>
+          ) : (
+            <Link to="/login" className="bg-brand-green text-white px-4 md:px-6 py-[10px] rounded-full hover:bg-brand-dark transition-all transform hover:scale-105 shadow-md text-xs md:text-sm font-bold uppercase tracking-widest">Sign In</Link>
+          )}
         </div>
 
         {/* Mobile Navigation Overlay */}

@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   User as UserIcon,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,6 +23,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const menuItems = [
     { icon: <LayoutDashboard size={22} />, label: 'Overview', path: '/admin/dashboard', desc: 'Performance & Stats' },
     { icon: <Package size={22} />, label: 'Products', path: '/admin/products', desc: 'Inventory Control' },
+    { icon: <ShoppingBag size={22} />, label: 'Orders', path: '/admin/orders', desc: 'Customer Sales' },
     { icon: <MessageSquare size={22} />, label: 'Inquiries', path: '/admin/inquiries', desc: 'Customer Leads' },
     { icon: <Settings size={22} />, label: 'Settings', path: '/admin/settings', desc: 'System Config' },
   ];
