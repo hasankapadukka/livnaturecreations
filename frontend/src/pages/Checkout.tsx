@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../utils/supabase';
+import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
@@ -14,7 +15,8 @@ import {
   ArrowLeft,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -44,22 +46,49 @@ const Checkout = () => {
 
   const fetchUserData = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
 
-    if (data) {
-      setFormData(prev => ({
-        ...prev,
-        full_name: data.full_name || '',
-        phone_number: data.phone_number || '',
-        shipping_address: data.shipping_address || '',
-        city: data.city || '',
-        postal_code: data.postal_code || ''
-      }));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFormData(prev => ({
+          ...prev,
+          full_name: data.full_name || '',
+          phone_number: data.phone_number || '',
+          shipping_address: data.shipping_address || '',
+          city: data.city || '',
+          postal_code: data.postal_code || ''
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching user data:', err);
     }
+  };
+
+  const handleWhatsAppConfirm = () => {
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '94706878899';
+    const itemsText = cart.map(item => `• *${item.name}* (${item.quantity} x ${item.unit})`).join('%0A');
+    const shippingCost = cartTotal > 5000 ? 0 : 450;
+    const totalValuation = cartTotal + shippingCost;
+    const trackingUrl = `https://liv-nature-creations-99.web.app/track-order?id=${orderId}`;
+    
+    const message = `*🌿 LIV NATURE CREATIONS - NEW ACQUISITION*%0A%0A` +
+      `*REGISTRY ID:* #${orderId?.slice(0, 8).toUpperCase()}%0A` +
+      `*STATUS:* PENDING CONFIRMATION%0A%0A` +
+      `*CUSTOMER DETAILS*%0A` +
+      `• Name: ${formData.full_name}%0A` +
+      `• Phone: ${formData.phone_number}%0A%0A` +
+      `*ARTIFACTS*%0A${itemsText}%0A%0A` +
+      `*VALUATION*%0A` +
+      `• Subtotal: LKR ${cartTotal.toLocaleString()}%0A` +
+      `• Shipping: ${shippingCost === 0 ? 'COMPLIMENTARY' : 'LKR ' + shippingCost}%0A` +
+      `• *TOTAL: LKR ${totalValuation.toLocaleString()}*%0A%0A` +
+      `*DELIVERY TARGET*%0A${formData.shipping_address}, ${formData.city}%0A%0A` +
+      `*TRACK YOUR JOURNEY:*%0A${trackingUrl}%0A%0A` +
+      `_Please authorize this acquisition to initiate preparation._`;
+
+    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
   };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -73,39 +102,28 @@ const Checkout = () => {
     setError(null);
 
     try {
-      // 1. Create the Order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_id: user.id,
-          total_amount: cartTotal,
-          shipping_address: formData.shipping_address,
-          city: formData.city,
-          postal_code: formData.postal_code,
-          contact_phone: formData.phone_number,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      // 1. Create the Order in Firestore
+      const orderRef = await addDoc(collection(db, 'orders'), {
+        customer_id: user.uid,
+        total_amount: cartTotal,
+        shipping_address: formData.shipping_address,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        contact_phone: formData.phone_number,
+        status: 'pending',
+        payment_method: formData.payment_method,
+        created_at: serverTimestamp(),
+        items: cart.map(item => ({
+          product_id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          unit: item.unit
+        }))
+      });
 
-      if (orderError) throw orderError;
-
-      // 2. Create Order Items
-      const orderItems = cart.map(item => ({
-        order_id: orderData.id,
-        product_id: item.id,
-        quantity: item.quantity,
-        price_at_purchase: item.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // 3. Success!
-      setOrderId(orderData.id);
+      // 2. Success!
+      setOrderId(orderRef.id);
       setOrderComplete(true);
       clearCart();
     } catch (err: any) {
@@ -122,25 +140,51 @@ const Checkout = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl w-full bg-white rounded-[50px] shadow-2xl p-12 md:p-16 text-center border border-gray-100"
+          className="max-w-2xl w-full bg-white rounded-[50px] shadow-2xl p-12 md:p-16 text-center border border-gray-100 relative overflow-hidden"
         >
-          <div className="w-24 h-24 bg-brand-green/10 rounded-full flex items-center justify-center text-brand-green mx-auto mb-10">
-            <CheckCircle2 size={48} />
+          {/* Decorative Background */}
+          <div className="absolute top-0 left-0 w-full h-2 bg-brand-green" />
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-green/5 rounded-full blur-3xl" />
+          
+          <div className="w-24 h-24 bg-brand-green/10 rounded-full flex items-center justify-center text-brand-green mx-auto mb-10 relative z-10">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', damping: 12 }}
+            >
+              <CheckCircle2 size={48} />
+            </motion.div>
           </div>
-          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4">Order Confirmed</h1>
-          <p className="text-gray-500 mb-2 font-medium">Thank you for your integration into nature's journey.</p>
-          <div className="bg-gray-50 rounded-2xl p-4 inline-block mb-12">
-             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2">Order Tracking ID:</span>
+
+          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4 relative z-10">Acquisition Logged</h1>
+          <p className="text-gray-500 mb-2 font-medium relative z-10">Your journey with Liv Nature has been successfully registered.</p>
+          <div className="bg-gray-50 rounded-2xl p-4 inline-block mb-12 relative z-10 border border-gray-100">
+             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2">Registry ID:</span>
              <span className="text-xs font-bold text-brand-green uppercase tracking-widest">{orderId?.slice(0, 8)}</span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link to="/orders" className="bg-brand-dark text-white py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl">
-              Track My Order
-            </Link>
-            <Link to="/products" className="bg-transparent border-2 border-brand-dark/10 text-brand-dark py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-dark hover:text-white transition-all">
-              Continue Shopping
-            </Link>
+          <div className="space-y-4 max-w-sm mx-auto relative z-10">
+            <button 
+              onClick={handleWhatsAppConfirm}
+              className="w-full bg-[#25D366] text-white py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:opacity-90 transition-all shadow-xl flex items-center justify-center space-x-3 group"
+            >
+              <MessageSquare size={18} className="group-hover:scale-110 transition-transform" />
+              <span>Authorize via WhatsApp</span>
+            </button>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Link to="/profile" className="bg-brand-dark text-white py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-lg text-center">
+                My Orders
+              </Link>
+              <Link to="/products" className="bg-transparent border border-brand-dark/10 text-brand-dark py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-brand-dark hover:text-white transition-all text-center">
+                Shopping
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-12 flex items-center justify-center space-x-3 opacity-30 relative z-10">
+            <ShieldCheck size={14} />
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Secured Registry Entry</span>
           </div>
         </motion.div>
       </div>

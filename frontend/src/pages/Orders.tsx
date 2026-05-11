@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../utils/supabase';
+import { collection, query, where, getDocs, orderBy, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Order } from '../types';
-import { Package, Truck, CheckCircle2, Clock, XCircle, ChevronRight, Loader2, Search, ArrowLeft, Heart, AlertTriangle } from 'lucide-react';
+import { Package, Truck, CheckCircle2, Clock, XCircle, ChevronRight, Loader2, Search, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Orders = () => {
@@ -17,37 +18,42 @@ const Orders = () => {
   }, [user]);
 
   const fetchOrders = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items (
-          *,
-          product:products (*)
-        )
-      `)
-      .eq('customer_id', user?.id)
-      .order('created_at', { ascending: false });
-
-    if (data) setOrders(data);
-    setLoading(false);
+    try {
+      const q = query(
+        collection(db, 'orders'),
+        where('customer_id', '==', user.uid),
+        orderBy('created_at', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const orderList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        // Convert Firestore timestamp to JS Date string for compatibility
+        created_at: doc.data().created_at?.toDate().toISOString() || new Date().toISOString()
+      } as any));
+      setOrders(orderList);
+    } catch (err) {
+      console.error('Error fetching orders from Firestore:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelOrder = async (orderId: string) => {
     if (!window.confirm('Are you certain you wish to abort this acquisition?')) return;
     
     setCancellingId(orderId);
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', orderId)
-      .eq('status', 'pending'); // Safety check
-
-    if (!error) {
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { status: 'cancelled' });
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'cancelled' as any } : o));
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+    } finally {
+      setCancellingId(null);
     }
-    setCancellingId(null);
   };
 
   const getStatusDetails = (status: string) => {
@@ -101,7 +107,7 @@ const Orders = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {orders.map((order) => {
+            {orders.map((order: any) => {
               const status = getStatusDetails(order.status);
               return (
                 <motion.div 
@@ -145,14 +151,14 @@ const Orders = () => {
                       <div className="space-y-6">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Acquired Artifacts</p>
                         <div className="space-y-4">
-                          {order.order_items?.map((item, idx) => (
+                          {order.items?.map((item: any, idx: number) => (
                             <div key={idx} className="flex items-center space-x-4">
-                              <div className="w-12 h-12 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0">
-                                <img src={item.product?.image_url} alt={item.product?.name} className="w-full h-full object-cover" />
+                              <div className="w-12 h-12 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 flex-shrink-0 flex items-center justify-center text-brand-green">
+                                <ShoppingBag size={20} />
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-brand-dark leading-tight">{item.product?.name}</p>
-                                <p className="text-[10px] text-gray-400 font-medium tracking-widest">QTY: {item.quantity}</p>
+                                <p className="text-xs font-bold text-brand-dark leading-tight">{item.name}</p>
+                                <p className="text-[10px] text-gray-400 font-medium tracking-widest">QTY: {item.quantity} x {item.unit}</p>
                               </div>
                             </div>
                           ))}

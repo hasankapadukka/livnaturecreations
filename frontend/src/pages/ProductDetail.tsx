@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../utils/supabase';
-import { Product } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
+import { Product, Category } from '../types';
 import { 
   ArrowLeft, 
   ShoppingBag, 
@@ -22,6 +23,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [categoryName, setCategoryName] = useState<string>('Nature Creations');
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -29,23 +31,34 @@ const ProductDetail = () => {
 
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!id) return;
       setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories (name)
-        `)
-        .eq('id', id)
-        .single();
+      try {
+        const docRef = doc(db, 'products', id);
+        const docSnap = await getDoc(docRef);
 
-      if (error) {
-        console.error('Error fetching product:', error);
+        if (docSnap.exists()) {
+          const productData = { id: docSnap.id, ...docSnap.data() } as Product;
+          setProduct(productData);
+
+          // Fetch category name separately if category_id exists
+          if (productData.category_id) {
+            const catRef = doc(db, 'categories', productData.category_id);
+            const catSnap = await getDoc(catRef);
+            if (catSnap.exists()) {
+              setCategoryName((catSnap.data() as Category).name);
+            }
+          }
+        } else {
+          console.error('No such product!');
+          navigate('/products');
+        }
+      } catch (error) {
+        console.error('Error fetching product from Firestore:', error);
         navigate('/products');
-      } else {
-        setProduct(data);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProduct();
@@ -115,7 +128,7 @@ const ProductDetail = () => {
           >
             <div className="mb-8">
               <p className="text-brand-green font-bold text-xs uppercase tracking-[0.3em] mb-4">
-                {(product as any).categories?.name || 'Nature Creations'}
+                {categoryName}
               </p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-brand-dark mb-6 leading-tight">
                 {product.name}
@@ -242,25 +255,6 @@ const ProductDetail = () => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-auto space-y-4">
-              <Link 
-                to="/contact" 
-                className="flex items-center justify-center space-x-3 w-full bg-brand-dark text-white py-6 rounded-[24px] text-xs font-bold uppercase tracking-[0.3em] hover:bg-brand-green transition-all shadow-xl group"
-              >
-                <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
-                <span>Inquire for Bulk Purchase</span>
-              </Link>
-              
-              <Link 
-                to="/export" 
-                className="flex items-center justify-center space-x-3 w-full bg-transparent border-2 border-brand-green/20 text-brand-green py-6 rounded-[24px] text-xs font-bold uppercase tracking-[0.3em] hover:bg-brand-green/5 transition-all"
-              >
-                <MessageSquare size={20} />
-                <span>Export Requirements</span>
-              </Link>
             </div>
 
             {/* Trust Badges */}

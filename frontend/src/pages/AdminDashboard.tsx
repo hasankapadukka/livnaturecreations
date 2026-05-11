@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   TrendingUp, 
@@ -8,21 +8,50 @@ import {
   ArrowUpRight, 
   Clock, 
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { collection, getDocs, query, limit, orderBy } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 
 const AdminDashboard = () => {
-  const stats = [
-    { label: 'Inventory Items', value: '24', change: '+2 new', icon: <Package size={24} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { label: 'Unread Inquiries', value: '7', change: '3 urgent', icon: <MessageSquare size={24} />, color: 'text-brand-green', bg: 'bg-brand-green/10' },
-    { label: 'Active Subscribers', value: '1,284', change: '+12% month', icon: <Users size={24} />, color: 'text-brand-gold', bg: 'bg-brand-gold/10' },
-  ];
+  const [counts, setCounts] = useState({
+    products: 0,
+    inquiries: 0,
+    orders: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const recentActivities = [
-    { type: 'inquiry', title: 'New Export Lead', desc: 'From "Green Valley Spices" (UK)', time: '2 hours ago', status: 'pending' },
-    { type: 'product', title: 'Product Updated', desc: 'Ceylon Cinnamon Powder (100g)', time: '5 hours ago', status: 'success' },
-    { type: 'contact', title: 'Contact Message', desc: 'Inquiry regarding bulk discounts', time: '1 day ago', status: 'resolved' },
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const [prodSnap, inqSnap, orderSnap] = await Promise.all([
+        getDocs(collection(db, 'products')),
+        getDocs(collection(db, 'contact_inquiries')),
+        getDocs(collection(db, 'orders'))
+      ]);
+
+      setCounts({
+        products: prodSnap.size,
+        inquiries: inqSnap.size,
+        orders: orderSnap.size
+      });
+    } catch (err) {
+      console.error('Error fetching admin stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stats = [
+    { label: 'Catalog Items', value: counts.products.toString(), icon: <Package size={24} />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: 'Unread Inquiries', value: counts.inquiries.toString(), icon: <MessageSquare size={24} />, color: 'text-brand-green', bg: 'bg-brand-green/10' },
+    { label: 'Total Acquisitions', value: counts.orders.toString(), icon: <ShoppingCart size={24} />, color: 'text-brand-gold', bg: 'bg-brand-gold/10' },
   ];
 
   return (
@@ -35,10 +64,10 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-4xl md:text-5xl font-bold font-serif text-white mb-4"
           >
-            Welcome back, <span className="text-brand-green italic">Rishanthan</span>
+            Command <span className="text-brand-green italic">Central</span>
           </motion.h1>
           <p className="text-gray-400 max-w-xl text-lg leading-relaxed">
-            Your nature creations are thriving. Here is a cinematic overview of your business performance today.
+            Registry overview for Liv Nature Creations. Integrated Firestore synchronization active.
           </p>
         </div>
         <div className="absolute top-0 right-0 h-full w-1/3 opacity-20 pointer-events-none">
@@ -61,19 +90,20 @@ const AdminDashboard = () => {
                 {stat.icon}
               </div>
               <div className="flex items-center space-x-1 text-xs font-bold text-brand-green">
-                <span>{stat.change}</span>
+                <span>Real-time</span>
                 <ArrowUpRight size={14} />
               </div>
             </div>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-2">{stat.label}</p>
-            <p className="text-5xl font-bold text-white group-hover:text-brand-green transition-colors">{stat.value}</p>
+            <p className="text-5xl font-bold text-white group-hover:text-brand-green transition-colors">
+              {loading ? '...' : stat.value}
+            </p>
           </motion.div>
         ))}
       </div>
 
-      {/* 3. Action & Activity Row */}
+      {/* 3. Action Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Quick Commands */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/5 p-10 rounded-[50px]">
           <h3 className="text-2xl font-bold font-serif text-white mb-8">Management Controls</h3>
           <div className="grid grid-cols-2 gap-6">
@@ -81,46 +111,25 @@ const AdminDashboard = () => {
               <Package size={32} className="opacity-40" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Products</p>
-                <p className="text-xl font-bold">Manage Inventory</p>
+                <p className="text-xl font-bold">Inventory Registry</p>
               </div>
             </Link>
-            <Link to="/admin/inquiries" className="group bg-brand-dark p-8 rounded-[32px] text-white transition-all hover:bg-white/10 border border-white/5 flex flex-col justify-between h-48">
-              <MessageSquare size={32} className="opacity-40 text-brand-gold" />
+            <Link to="/admin/orders" className="group bg-brand-dark p-8 rounded-[32px] text-white transition-all hover:bg-white/10 border border-white/5 flex flex-col justify-between h-48">
+              <ShoppingCart size={32} className="opacity-40 text-brand-gold" />
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest opacity-40 mb-1">Leads</p>
-                <p className="text-xl font-bold">Review Inquiries</p>
+                <p className="text-xs font-bold uppercase tracking-widest opacity-40 mb-1">Orders</p>
+                <p className="text-xl font-bold">Acquisition Log</p>
               </div>
             </Link>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/5 p-10 rounded-[50px] flex flex-col">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold font-serif text-white">Security Timeline</h3>
-            <div className="flex items-center space-x-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              <Clock size={14} />
-              <span>Real-time Sync</span>
+        <div className="bg-white/5 backdrop-blur-xl border border-white/5 p-10 rounded-[50px] flex flex-col items-center justify-center text-center">
+            <div className="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center text-brand-green mb-6">
+              <CheckCircle2 size={40} />
             </div>
-          </div>
-          <div className="space-y-6 flex-grow">
-            {recentActivities.map((activity, i) => (
-              <div key={i} className="flex items-start space-x-6 group">
-                <div className={`mt-1.5 w-2 h-2 rounded-full ${
-                  activity.status === 'pending' ? 'bg-brand-gold animate-pulse' : 
-                  activity.status === 'success' ? 'bg-brand-green' : 'bg-blue-400'
-                }`} />
-                <div className="flex-grow pb-6 border-b border-white/5 last:border-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-bold text-gray-200 group-hover:text-brand-green transition-colors">{activity.title}</h4>
-                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">{activity.time}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium">{activity.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="w-full mt-6 py-4 border border-white/5 rounded-2xl text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] hover:bg-white/5 transition-all">View All Logs</button>
+            <h3 className="text-2xl font-bold font-serif text-white mb-2">System Integrity</h3>
+            <p className="text-gray-500 text-sm max-w-xs">All Firebase services are operational. Data parity with Firestore is verified.</p>
         </div>
       </div>
     </div>

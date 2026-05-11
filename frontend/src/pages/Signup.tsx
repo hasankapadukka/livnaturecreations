@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { supabase } from '../utils/supabase';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../utils/firebase';
 import { Mail, Lock, User, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 const Signup = () => {
@@ -17,22 +19,28 @@ const Signup = () => {
     setLoading(true);
     setError(null);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          is_admin: false
-        }
-      }
-    });
+    try {
+      // 1. Create Auth User
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+      // 2. Send Verification Email
+      await sendEmailVerification(user);
+
+      // 3. Create Firestore Profile Document
+      await setDoc(doc(db, 'users', user.uid), {
+        full_name: fullName,
+        email: email,
+        is_admin: false,
+        created_at: new Date().toISOString()
+      });
+
+      // 3. Success!
       navigate('/verify-email', { state: { email } });
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      setError(err.message || 'Failed to create account');
+      setLoading(false);
     }
   };
 

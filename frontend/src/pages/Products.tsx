@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart, Info, CheckCircle2, Loader2, Filter } from 'lucide-react';
-import { supabase } from '../utils/supabase';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Category, Product } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,15 +19,19 @@ const Products = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [catRes, prodRes] = await Promise.all([
-        supabase.from('categories').select('*'),
-        supabase.from('products').select('*')
-      ]);
+      
+      // 1. Fetch Categories
+      const catSnapshot = await getDocs(collection(db, 'categories'));
+      const catList = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+      setCategories(catList);
 
-      if (catRes.data) setCategories(catRes.data);
-      if (prodRes.data) setProducts(prodRes.data);
+      // 2. Fetch Products
+      const prodSnapshot = await getDocs(collection(db, 'products'));
+      const prodList = prodSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+      setProducts(prodList);
+
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching data from Firestore:', error);
     } finally {
       setLoading(false);
     }

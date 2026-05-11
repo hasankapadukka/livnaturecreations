@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Globe, ShieldCheck, Zap, Ship, BarChart3, MessageSquare, Send, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../utils/supabase';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -25,11 +26,25 @@ const Export = () => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('export_inquiries')
-        .insert([formData]);
+      
+      // Save to Firestore
+      await addDoc(collection(db, 'export_inquiries'), {
+        ...formData,
+        created_at: new Date(),
+        status: 'pending'
+      });
 
-      if (error) throw error;
+      // Prepare WhatsApp message
+      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "94112171368";
+      const message = `*EXPORT INQUIRY - LIV NATURE*\n\n` +
+                      `*Name:* ${formData.full_name}\n` +
+                      `*Company:* ${formData.company_name}\n` +
+                      `*Email:* ${formData.email}\n` +
+                      `*Country:* ${formData.destination_country}\n\n` +
+                      `*Details:* ${formData.requirement_details}`;
+      
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
       setStatus('success');
       setFormData({
         full_name: '',
@@ -38,6 +53,10 @@ const Export = () => {
         destination_country: '',
         requirement_details: ''
       });
+
+      // Open WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
     } catch (error) {
       console.error('Error submitting export inquiry:', error);
       setStatus('error');
@@ -219,7 +238,7 @@ const Export = () => {
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <>
-                    <span>Submit Export Inquiry</span>
+                    <span>Submit & Open WhatsApp</span>
                     <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                   </>
                 )}
@@ -234,7 +253,7 @@ const Export = () => {
                     className="flex items-center space-x-2 text-brand-green font-bold text-sm"
                   >
                     <CheckCircle size={20} />
-                    <span>Inquiry submitted successfully!</span>
+                    <span>Inquiry logged & WhatsApp trigger active!</span>
                   </motion.div>
                 )}
                 {status === 'error' && (

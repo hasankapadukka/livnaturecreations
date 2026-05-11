@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, ArrowRight, ShieldCheck, Zap, Award, Globe, Leaf, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { supabase } from '../utils/supabase';
+import { collection, getDocs, query, where, limit, addDoc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Category, Product } from '../types';
 
 const fadeInUp = {
@@ -36,13 +37,20 @@ const Home = () => {
   const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const [catRes, prodRes] = await Promise.all([
-        supabase.from('categories').select('*').limit(4),
-        supabase.from('products').select('*').eq('is_featured', true).limit(4)
+      
+      const catQuery = query(collection(db, 'categories'), limit(4));
+      const prodQuery = query(collection(db, 'products'), where('is_featured', '==', true), limit(4));
+
+      const [catSnap, prodSnap] = await Promise.all([
+        getDocs(catQuery),
+        getDocs(prodQuery)
       ]);
 
-      if (catRes.data) setCategories(catRes.data);
-      if (prodRes.data) setFeaturedProducts(prodRes.data);
+      const catList = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+      const prodList = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+      setCategories(catList);
+      setFeaturedProducts(prodList);
     } catch (error) {
       console.error('Error fetching home data:', error);
     } finally {
@@ -56,11 +64,11 @@ const Home = () => {
 
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('newsletter_subscriptions')
-        .insert([{ email }]);
+      await addDoc(collection(db, 'newsletter_subscriptions'), {
+        email,
+        created_at: new Date()
+      });
 
-      if (error) throw error;
       setSubscribeStatus('success');
       setEmail('');
     } catch (error) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { 
   Mail, 
   MessageSquare, 
@@ -16,31 +17,49 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminInquiries = () => {
-  const [activeTab, setActiveTab] = useState<'contact' | 'export' | 'newsletter'>('contact');
+  const [activeTab, setActiveTab] = useState<'contact' | 'export'>('contact');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchInquiries();
+    setLoading(true);
+    let collectionName = activeTab === 'contact' ? 'contact_inquiries' : 'export_inquiries';
+
+    const q = query(collection(db, collectionName), orderBy('created_at', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        created_at: doc.data().created_at?.toDate().toISOString() || new Date().toISOString()
+      }));
+      setData(list);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error listening to inquiries:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [activeTab]);
 
-  const fetchInquiries = async () => {
-    setLoading(true);
-    let tableName = '';
-    switch (activeTab) {
-      case 'contact': tableName = 'contact_inquiries'; break;
-      case 'export': tableName = 'export_inquiries'; break;
-      case 'newsletter': tableName = 'newsletter_subscriptions'; break;
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Confirm permanent deletion of this lead?')) return;
+    try {
+      let collectionName = activeTab === 'contact' ? 'contact_inquiries' : 'export_inquiries';
+      await deleteDoc(doc(db, collectionName, id));
+    } catch (err) {
+      console.error('Error deleting inquiry:', err);
     }
+  };
 
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error) setData(data || []);
-    setLoading(false);
+  const handleResolve = async (id: string) => {
+    try {
+      let collectionName = activeTab === 'contact' ? 'contact_inquiries' : 'export_inquiries';
+      await updateDoc(doc(db, collectionName, id), { status: 'resolved' });
+    } catch (err) {
+      console.error('Error resolving inquiry:', err);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -56,7 +75,7 @@ const AdminInquiries = () => {
   const filteredData = data.filter(item => 
     (item.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (item.full_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (item.company?.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item.company_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -83,7 +102,6 @@ const AdminInquiries = () => {
             {[
               { id: 'contact', label: 'Inquiries', icon: <MessageSquare size={16} /> },
               { id: 'export', label: 'Export Leads', icon: <Globe size={16} /> },
-              { id: 'newsletter', label: 'Sync', icon: <Mail size={16} /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -131,10 +149,16 @@ const AdminInquiries = () => {
                   className="bg-white/5 backdrop-blur-xl border border-white/5 p-8 md:p-12 rounded-[40px] shadow-2xl hover:border-brand-green/30 hover:bg-white/[0.07] transition-all group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 p-8 flex space-x-3 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-[-10px] group-hover:translate-y-0">
-                    <button className="w-12 h-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-brand-green hover:border-brand-green/30 transition-all">
+                    <button 
+                      onClick={() => handleResolve(item.id)}
+                      className="w-12 h-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-brand-green hover:border-brand-green/30 transition-all"
+                    >
                        <CheckCircle2 size={20} />
                     </button>
-                    <button className="w-12 h-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500/30 transition-all">
+                    <button 
+                      onClick={() => handleDelete(item.id)}
+                      className="w-12 h-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500/30 transition-all"
+                    >
                        <Trash2 size={20} />
                     </button>
                   </div>
@@ -151,6 +175,7 @@ const AdminInquiries = () => {
                           <div className="flex items-center space-x-3 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                             <Clock size={12} className="text-brand-green" />
                             <span>Received {formatDate(item.created_at)}</span>
+                            {item.status === 'resolved' && <span className="text-brand-green ml-2 font-black">[RESOLVED]</span>}
                           </div>
                         </div>
                       </div>
@@ -167,39 +192,42 @@ const AdminInquiries = () => {
                             <span className="text-xs font-bold text-gray-300">{item.phone}</span>
                           </div>
                         )}
-                        {item.country && (
+                        {item.destination_country && (
                           <div className="flex items-center space-x-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
                             <Globe size={14} className="text-blue-400" />
-                            <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">{item.country}</span>
+                            <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">{item.destination_country}</span>
                           </div>
                         )}
                       </div>
 
                       {/* Content Buffer */}
-                      {item.message && (
+                      {(item.message || item.requirement_details) && (
                         <div className="relative mt-8">
                            <div className="absolute -left-6 top-0 bottom-0 w-1 bg-brand-green/20 rounded-full" />
                            <p className="text-lg text-gray-300 font-serif leading-relaxed italic opacity-80 pl-4">
-                             "{item.message}"
+                             "{item.message || item.requirement_details}"
                            </p>
                         </div>
                       )}
                       
-                      {item.company && (
+                      {item.company_name && (
                         <div className="inline-flex items-center space-x-3 bg-brand-dark/40 px-6 py-3 rounded-2xl border border-brand-green/20">
                            <ShieldCheck size={14} className="text-brand-green" />
                            <span className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">
-                              Organization: <span className="text-brand-green">{item.company}</span>
+                              Organization: <span className="text-brand-green">{item.company_name}</span>
                            </span>
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center lg:items-end justify-between lg:justify-end lg:h-full">
-                       <button className="flex items-center space-x-3 px-8 py-4 bg-brand-green/10 border border-brand-green/20 text-brand-green rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-green hover:text-white transition-all">
-                          <span>Respond to Inquiry</span>
+                       <a 
+                        href={`mailto:${item.email}?subject=Liv Nature Inquiry Response`}
+                        className="flex items-center space-x-3 px-8 py-4 bg-brand-green/10 border border-brand-green/20 text-brand-green rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-green hover:text-white transition-all"
+                       >
+                          <span>Respond via Email</span>
                           <ArrowRight size={14} />
-                       </button>
+                       </a>
                     </div>
                   </div>
                 </motion.div>

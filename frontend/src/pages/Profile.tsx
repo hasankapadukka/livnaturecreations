@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../utils/supabase';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Profile as ProfileType } from '../types';
 import { User, Mail, Phone, MapPin, Package, Settings, LogOut, Loader2, CheckCircle2, Heart, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -30,24 +31,34 @@ const Profile = () => {
   }, [wishlist]);
 
   const fetchWishlistProducts = async () => {
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .in('id', wishlist);
-    if (data) setWishlistProducts(data);
+    if (wishlist.length === 0) return;
+    try {
+      // Firestore doesn't have an 'in' operator for document IDs easily in a simple query without collection ref
+      // but we can query the 'products' collection
+      const q = query(collection(db, 'products'), where('__name__', 'in', wishlist));
+      const querySnapshot = await getDocs(q);
+      const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setWishlistProducts(products);
+    } catch (err) {
+      console.error('Error fetching wishlist products:', err);
+    }
   };
 
   const fetchProfile = async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
 
-    if (data) setProfile(data);
-    setLoading(false);
+      if (docSnap.exists()) {
+        setProfile(docSnap.data() as ProfileType);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -57,24 +68,24 @@ const Profile = () => {
     setSaving(true);
     setMessage(null);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
         full_name: profile.full_name,
         phone_number: profile.phone_number,
         shipping_address: profile.shipping_address,
         city: profile.city,
         postal_code: profile.postal_code,
-      })
-      .eq('id', user.id);
+      });
 
-    if (error) {
-      setMessage({ type: 'error', text: error.message });
-    } else {
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setTimeout(() => setMessage(null), 3000);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {
@@ -247,7 +258,7 @@ const Profile = () => {
                   <button 
                     type="submit"
                     disabled={saving}
-                    className="bg-brand-dark text-white px-12 py-5 rounded-2xl text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl shadow-brand-dark/10 flex items-center space-x-3 disabled:opacity-50"
+                    className="bg-brand-dark text-white px-12 py-5 rounded-2xl text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl shadow-brand-dark/10 flex items-center justify-center space-x-3 disabled:opacity-50"
                   >
                     {saving ? <Loader2 className="animate-spin" size={16} /> : <span>Update Profile</span>}
                   </button>
@@ -280,10 +291,10 @@ const Profile = () => {
                           <div className="mt-4 flex items-center space-x-4">
                              <Link to={`/products/${product.id}`} className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-brand-dark transition-colors">Details</Link>
                              <button 
-                              onClick={() => toggleWishlist(product.id)}
-                              className="text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors"
+                               onClick={() => toggleWishlist(product.id)}
+                               className="text-[9px] font-bold uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors"
                              >
-                               Remove
+                                Remove
                              </button>
                           </div>
                         </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../utils/supabase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Order } from '../types';
 import { 
   Search, 
@@ -34,26 +35,22 @@ const TrackOrder = () => {
     setLoading(true);
     setError(null);
     
-    // We try to find the order by ID
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items (
-          *,
-          product:products (*)
-        )
-      `)
-      .eq('id', id.trim())
-      .single();
+    try {
+      const docRef = doc(db, 'orders', id.trim());
+      const docSnap = await getDoc(docRef);
 
-    if (error) {
-      setError('Order identification failed. Please check the ID and try again.');
-      setOrder(null);
-    } else {
-      setOrder(data);
+      if (docSnap.exists()) {
+        setOrder({ id: docSnap.id, ...docSnap.data() } as any);
+      } else {
+        setError('Order identification failed. Please check the ID and try again.');
+        setOrder(null);
+      }
+    } catch (err) {
+      console.error('Error tracking order from Firestore:', err);
+      setError('An error occurred while attempting to locate the record.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const statusSteps = [
@@ -84,7 +81,7 @@ const TrackOrder = () => {
               type="text" 
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="Enter your 8-digit Order Reference ID..."
+              placeholder="Enter your Registry ID..."
               className="w-full bg-gray-50 border border-gray-100 rounded-full pl-20 pr-40 py-6 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
             />
             <button 

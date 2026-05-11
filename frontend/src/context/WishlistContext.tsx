@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { useAuth } from './AuthContext';
 
 interface WishlistContextType {
@@ -26,14 +27,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [user]);
 
   const fetchWishlist = async () => {
+    if (!user) return;
     try {
-      const { data, error } = await supabase
-        .from('wishlist')
-        .select('product_id')
-        .eq('user_id', user?.id);
-
-      if (data) {
-        setWishlist(data.map(item => item.product_id));
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        setWishlist(userDoc.data().wishlist || []);
       }
     } catch (err) {
       console.error('Error fetching wishlist:', err);
@@ -46,21 +44,26 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!user) return;
 
     const isItemInWishlist = wishlist.includes(productId);
+    const userRef = doc(db, 'users', user.uid);
 
-    if (isItemInWishlist) {
-      // Remove
-      setWishlist(prev => prev.filter(id => id !== productId));
-      await supabase
-        .from('wishlist')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('product_id', productId);
-    } else {
-      // Add
-      setWishlist(prev => [...prev, productId]);
-      await supabase
-        .from('wishlist')
-        .insert({ user_id: user.id, product_id: productId });
+    try {
+      if (isItemInWishlist) {
+        // Remove
+        setWishlist(prev => prev.filter(id => id !== productId));
+        await updateDoc(userRef, {
+          wishlist: arrayRemove(productId)
+        });
+      } else {
+        // Add
+        setWishlist(prev => [...prev, productId]);
+        await updateDoc(userRef, {
+          wishlist: arrayUnion(productId)
+        });
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+      // Revert local state on error
+      fetchWishlist();
     }
   };
 

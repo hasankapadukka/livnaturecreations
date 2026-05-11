@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../utils/supabase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../utils/firebase';
 import { ShieldCheck, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Logo from '../assets/Liv Nature Creations Logo.png';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -20,37 +23,31 @@ const AdminLogin = () => {
       setLoading(true);
       setError(null);
       
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) throw signInError;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
       // Check if user is actually an admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', data.user.id)
-        .maybeSingle(); // Use maybeSingle to avoid error if row doesn't exist
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
 
-      if (profileError) {
-        throw new Error('Database connection error. Please try again in a moment.');
+      if (!userDoc.exists()) {
+        throw new Error('User profile not found in secure registry.');
       }
 
-      if (!profile) {
-        // This usually means the trigger hasn't run yet or failed
-        throw new Error('Admin profile not found. Please ensure you have run the SQL setup and promoted your user.');
-      }
-
-      if (!profile.is_admin) {
-        await supabase.auth.signOut();
+      if (!userData?.is_admin) {
+        await signOut(auth);
         throw new Error('Access denied. This portal is for administrators only.');
       }
 
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      let message = 'Authentication failed';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        message = 'Invalid administrative credentials';
+      } else {
+        message = err.message || message;
+      }
+      setError(message);
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -72,8 +69,8 @@ const AdminLogin = () => {
       >
         <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden">
           <div className="bg-brand-green p-8 text-center text-white">
-            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20">
-              <ShieldCheck size={32} />
+            <div className="h-16 flex items-center justify-center mx-auto mb-4">
+              <img src={Logo} alt="Liv Nature Creations" className="h-full w-auto object-contain brightness-0 invert" />
             </div>
             <h1 className="text-2xl font-bold font-serif uppercase tracking-widest">Admin Portal</h1>
             <p className="text-white/60 text-xs font-medium mt-2">Liv Nature Creations Management</p>

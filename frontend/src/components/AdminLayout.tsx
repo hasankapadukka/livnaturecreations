@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import Logo from '../assets/Liv Nature Creations Logo.png';
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuth();
@@ -47,11 +48,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {/* Logo Section */}
           <div className="p-8 border-b border-white/5">
             <Link to="/" className="group block">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-green/20">L</div>
-                <div>
-                  <span className="text-sm font-bold tracking-[0.2em] text-white block leading-tight uppercase">LIV NATURE</span>
-                </div>
+              <div className="flex items-center space-x-3 h-10">
+                <img src={Logo} alt="Liv Nature Creations" className="h-full w-auto object-contain brightness-0 invert" />
               </div>
             </Link>
           </div>
@@ -151,9 +149,8 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               className="fixed inset-y-0 left-0 w-80 bg-brand-dark z-[60] lg:hidden flex flex-col p-8"
             >
               <div className="flex justify-between items-center mb-12">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center text-white font-bold text-xl">L</div>
-                  <span className="text-white font-bold tracking-widest text-sm uppercase">Admin Console</span>
+                <div className="flex items-center space-x-4 h-10">
+                  <img src={Logo} alt="Liv Nature Creations" className="h-full w-auto object-contain brightness-0 invert" />
                 </div>
                 <button onClick={() => setIsMobileMenuOpen(false)} className="text-white">
                   <X size={28} />

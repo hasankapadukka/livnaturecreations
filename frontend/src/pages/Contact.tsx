@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Instagram, Facebook, Clock, Send, Loader2, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Facebook, Clock, Send, Loader2, CheckCircle, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../utils/supabase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -34,11 +35,24 @@ const Contact = () => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('contact_inquiries')
-        .insert([formData]);
+      
+      // 1. Save to Firestore
+      await addDoc(collection(db, 'contact_inquiries'), {
+        ...formData,
+        created_at: serverTimestamp()
+      });
 
-      if (error) throw error;
+      // 2. Trigger WhatsApp
+      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '94112171368';
+      const waMessage = `*New Inquiry from Liv Nature website*%0A%0A` +
+        `*Name:* ${formData.full_name}%0A` +
+        `*Subject:* ${formData.subject}%0A` +
+        `*Email:* ${formData.email}%0A` +
+        `*Phone:* ${formData.phone}%0A%0A` +
+        `*Message:*%0A${formData.message}`;
+      
+      window.open(`https://wa.me/${whatsappNumber}?text=${waMessage}`, '_blank');
+
       setStatus('success');
       setFormData({
         full_name: '',
@@ -99,8 +113,8 @@ const Contact = () => {
             className="lg:col-span-1 space-y-8"
           >
             {[
-              { icon: <Phone size={24} />, title: 'Call Us', detail: '+94 77 XXX XXXX', sub: 'Direct support for orders.', link: 'tel:+9477XXXXXXX' },
-              { icon: <Mail size={24} />, title: 'Email Us', detail: 'info@livnature.com', sub: '24/7 Response time.', link: 'mailto:info@livnature.com' },
+              { icon: <Phone size={24} />, title: 'Call Us', detail: '+94 112 171 368', sub: 'Direct support for orders.', link: 'tel:+94112171368' },
+              { icon: <Mail size={24} />, title: 'Email Us', detail: 'creations@livnatureexpo.com', sub: '24/7 Response time.', link: 'mailto:creations@livnatureexpo.com' },
               { icon: <Clock size={24} />, title: 'Working Hours', detail: 'Mon - Fri: 9am - 6pm', sub: 'Sat: 9am - 2pm', link: null }
             ].map((item, i) => (
               <motion.div 
@@ -135,7 +149,7 @@ const Contact = () => {
              
              <div className="relative z-10">
                <h2 className="text-3xl md:text-5xl font-bold font-serif mb-6 text-brand-dark">Send a Message</h2>
-               <p className="text-gray-500 mb-12 md:mb-16 text-lg leading-relaxed font-medium">Whether you're interested in retail or bulk ordering, our team is ready to assist you.</p>
+               <p className="text-gray-500 mb-12 md:mb-16 text-lg leading-relaxed font-medium">Whether you're interested in retail or bulk ordering, our team is ready to assist you via WhatsApp.</p>
                
                <form className="space-y-8 md:space-y-12" onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
@@ -202,14 +216,14 @@ const Contact = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       disabled={submitting}
-                      className="bg-brand-green text-white px-16 md:px-20 py-5 md:py-6 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-dark transition-all shadow-2xl flex items-center justify-center space-x-3 group w-full sm:w-auto disabled:opacity-50 min-w-[250px]"
+                      className="bg-[#25D366] text-white px-16 md:px-20 py-5 md:py-6 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:opacity-90 transition-all shadow-2xl flex items-center justify-center space-x-3 group w-full sm:w-auto disabled:opacity-50 min-w-[300px]"
                     >
                        {submitting ? (
                          <Loader2 className="animate-spin" size={20} />
                        ) : (
                          <>
-                           <span>Send Message</span>
-                           <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                           <span>Send via WhatsApp</span>
+                           <MessageSquare size={16} className="group-hover:translate-x-1 transition-transform" />
                          </>
                        )}
                     </motion.button>
@@ -223,17 +237,7 @@ const Contact = () => {
                           className="flex items-center space-x-2 text-brand-green font-bold text-sm"
                         >
                           <CheckCircle size={20} />
-                          <span>Message sent successfully!</span>
-                        </motion.div>
-                      )}
-                      {status === 'error' && (
-                        <motion.div 
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="text-red-500 font-bold text-sm"
-                        >
-                          Something went wrong. Please try again.
+                          <span>WhatsApp window opened!</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -265,14 +269,14 @@ const Contact = () => {
                   <div className="w-16 h-16 bg-brand-light rounded-2xl flex items-center justify-center text-brand-green mb-4">
                     <MapPin size={32} />
                   </div>
-                  <span className="font-bold text-brand-dark text-xl font-serif">Headquarters</span>
-                  <span className="text-sm font-medium text-gray-500">Colombo, Sri Lanka</span>
+                  <span className="font-bold text-brand-dark text-xl font-serif text-center px-4">Sri Jayawardenepura Kotte</span>
+                  <span className="text-sm font-medium text-gray-500">112 Diyawanna Gdn Rd</span>
                </motion.div>
             </div>
             <div className="lg:w-1/3 p-12 md:p-20 flex flex-col justify-center text-center lg:text-left bg-warm-white/50">
                <h3 className="text-3xl md:text-4xl font-bold font-serif mb-8 text-brand-dark">Visit Our Office</h3>
                <p className="text-gray-500 mb-12 leading-relaxed text-lg font-medium">
-                  Located in the heart of Colombo, our corporate office manages global operations and retail distribution. Visit us for partnership discussions and product sampling.
+                  Located in the prestigious Diyawanna Garden region, our headquarters manages the integration of Sri Lanka's finest harvests into the global value chain.
                </p>
                <div className="flex items-center justify-center lg:justify-start space-x-6">
                   <motion.a whileHover={{ scale: 1.1, y: -5 }} href="#" className="w-14 h-14 rounded-2xl bg-brand-light flex items-center justify-center text-brand-green hover:bg-brand-green hover:text-white transition-all shadow-md"><Instagram size={24} /></motion.a>

@@ -126,12 +126,19 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                 
                 <div className="space-y-3">
                   <Link 
-                    to="/contact" 
+                    to="/checkout" 
                     onClick={onClose}
                     className="flex items-center justify-center space-x-3 w-full bg-brand-green text-white py-5 rounded-[20px] text-xs font-bold uppercase tracking-[0.2em] hover:bg-brand-dark transition-all shadow-xl group"
                   >
-                    <span>Proceed to Inquiry</span>
+                    <span>Proceed to Checkout</span>
                     <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                  </Link>
+                  <Link 
+                    to="/cart"
+                    onClick={onClose}
+                    className="block text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-brand-dark transition-colors py-2"
+                  >
+                    View Selection Details
                   </Link>
                   <p className="text-[9px] text-center text-gray-400 font-medium uppercase tracking-[0.1em]">
                     Free shipping on orders above LKR 5,000

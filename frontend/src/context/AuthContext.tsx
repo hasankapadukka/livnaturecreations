@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '../utils/supabase';
+import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../utils/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -17,23 +18,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check initial session
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
-        await checkAdminStatus(session.user.id);
-      }
-      setLoading(false);
-    };
-
-    checkUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        setUser(session.user);
-        await checkAdminStatus(session.user.id);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        await checkAdminStatus(currentUser.uid);
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -41,37 +29,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (userId: string, retryCount = 0) => {
+  const checkAdminStatus = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        // If it's a 500 error or table not found, retry once after a delay
-        if (retryCount < 2 && (error.code === 'PGRST116' || error.message.includes('500'))) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return checkAdminStatus(userId, retryCount + 1);
-        }
-        throw error;
-      }
+      const docRef = doc(db, 'users', userId);
+      const docSnap = await getDoc(docRef);
       
-      setIsAdmin(data?.is_admin || false);
+      if (docSnap.exists()) {
+        setIsAdmin(docSnap.data().is_admin || false);
+      } else {
+        setIsAdmin(false);
+      }
     } catch (error) {
-      console.warn('Admin status check failed (possibly RLS or missing row):', error);
+      console.warn('Admin status check failed:', error);
       setIsAdmin(false);
     }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await firebaseSignOut(auth);
   };
 
   return (

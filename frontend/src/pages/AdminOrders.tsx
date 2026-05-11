@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../utils/supabase';
+import { collection, getDocs, query, orderBy, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Order } from '../types';
 import { 
   Package, 
@@ -9,11 +10,10 @@ import {
   XCircle, 
   Search, 
   Filter, 
-  ChevronRight, 
-  ExternalLink,
   MoreVertical,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ShoppingBag
 } from 'lucide-react';
 
 const AdminOrders = () => {
@@ -23,45 +23,39 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    fetchOrders();
+    // Using onSnapshot for real-time updates in admin panel
+    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const orderList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        created_at: doc.data().created_at?.toDate().toISOString() || new Date().toISOString()
+      } as any));
+      setOrders(orderList);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error listening to orders:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        order_items (
-          *,
-          product:products (*)
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (data) setOrders(data);
-    setLoading(false);
-  };
-
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
-
-    if (!error) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus as any } : o));
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { status: newStatus });
+    } catch (err) {
+      console.error('Error updating order status:', err);
     }
   };
 
   const updateTrackingNumber = async (orderId: string, trackingNum: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ tracking_number: trackingNum })
-      .eq('id', orderId);
-
-    if (!error) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNum } : o));
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { tracking_number: trackingNum });
+    } catch (err) {
+      console.error('Error updating tracking number:', err);
     }
   };
 
@@ -78,7 +72,7 @@ const AdminOrders = () => {
 
   const filteredOrders = orders.filter(o => 
     (o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     o.contact_phone.includes(searchTerm)) &&
+     o.contact_phone?.includes(searchTerm)) &&
     (statusFilter === 'all' || o.status === statusFilter)
   );
 
@@ -95,8 +89,8 @@ const AdminOrders = () => {
            <p className="text-3xl font-bold text-amber-500">{orders.filter(o => o.status === 'pending').length}</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-[32px] p-8">
-           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Total Revenue</p>
-           <p className="text-3xl font-bold text-green-500">LKR {orders.reduce((acc, o) => acc + o.total_amount, 0).toLocaleString()}</p>
+           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Total Valuation</p>
+           <p className="text-3xl font-bold text-green-500">LKR {orders.reduce((acc, o) => acc + (o.total_amount || 0), 0).toLocaleString()}</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-[32px] p-8">
            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Completed</p>
@@ -123,115 +117,111 @@ const AdminOrders = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-transparent text-sm text-white focus:outline-none py-2"
           >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="all" className="bg-brand-dark">All Statuses</option>
+            <option value="pending" className="bg-brand-dark">Pending</option>
+            <option value="processing" className="bg-brand-dark">Processing</option>
+            <option value="shipped" className="bg-brand-dark">Shipped</option>
+            <option value="delivered" className="bg-brand-dark">Delivered</option>
+            <option value="cancelled" className="bg-brand-dark">Cancelled</option>
           </select>
         </div>
-        <button 
-          onClick={fetchOrders}
-          className="bg-brand-green text-white px-8 py-4 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-white hover:text-brand-dark transition-all"
-        >
-          Refresh Data
-        </button>
       </div>
 
       {/* Orders Table */}
       <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden shadow-2xl">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-white/5 border-b border-white/10">
-              <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Details</th>
-              <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer Info</th>
-              <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Valuation</th>
-              <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shipment Status</th>
-              <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="py-20 text-center">
-                  <Loader2 className="animate-spin text-brand-green mx-auto mb-4" size={32} />
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Syncing Registry...</p>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-white/5 border-b border-white/10">
+                <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Details</th>
+                <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer Info</th>
+                <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Valuation</th>
+                <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Shipment Status</th>
+                <th className="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
-            ) : filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-20 text-center">
-                  <AlertCircle className="text-gray-600 mx-auto mb-4" size={32} />
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">No matching acquisitions found</p>
-                </td>
-              </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-white/5 transition-colors group">
-                  <td className="px-8 py-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-white mb-1 uppercase tracking-widest">#{order.id.slice(0, 8)}</span>
-                      <span className="text-[10px] font-medium text-gray-500 uppercase tracking-tight">
-                        {new Date(order.created_at).toLocaleString()}
-                      </span>
-                      <div className="mt-2 flex -space-x-2">
-                        {order.order_items?.map((item, i) => (
-                          <div key={i} className="w-6 h-6 rounded-full border-2 border-brand-dark bg-white overflow-hidden" title={item.product?.name}>
-                            <img src={item.product?.image_url} alt="" className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-white mb-1">{order.contact_phone}</span>
-                      <span className="text-[10px] font-medium text-gray-500 uppercase tracking-tight line-clamp-1 italic">
-                        {order.city}, {order.postal_code}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-brand-green">LKR {order.total_amount.toLocaleString()}</span>
-                      <span className="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
-                        {order.order_items?.length} Items
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-8">
-                    <div className="flex flex-col space-y-2">
-                      <select 
-                        value={order.status}
-                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                        className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border focus:outline-none transition-all ${getStatusColor(order.status)}`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <input 
-                        type="text" 
-                        placeholder="Add Tracking #"
-                        value={order.tracking_number || ''}
-                        onChange={(e) => updateTrackingNumber(order.id, e.target.value)}
-                        className="bg-transparent border-b border-white/10 text-[10px] text-gray-400 py-1 focus:outline-none focus:border-brand-green/30"
-                      />
-                    </div>
-                  </td>
-                  <td className="px-8 py-8 text-right">
-                    <button className="p-3 bg-white/5 border border-white/10 rounded-2xl text-gray-400 hover:text-white hover:bg-white/10 transition-all">
-                      <MoreVertical size={18} />
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center">
+                    <Loader2 className="animate-spin text-brand-green mx-auto mb-4" size={32} />
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Syncing Registry...</p>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center">
+                    <AlertCircle className="text-gray-600 mx-auto mb-4" size={32} />
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">No matching acquisitions found</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map((order: any) => (
+                  <tr key={order.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="px-8 py-8">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white mb-1 uppercase tracking-widest">#{order.id.slice(0, 8)}</span>
+                        <span className="text-[10px] font-medium text-gray-500 uppercase tracking-tight">
+                          {new Date(order.created_at).toLocaleString()}
+                        </span>
+                        <div className="mt-2 flex -space-x-2">
+                          {order.items?.map((item: any, i: number) => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-brand-dark bg-white flex items-center justify-center overflow-hidden" title={item.name}>
+                              <ShoppingBag size={12} className="text-brand-green" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-8">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white mb-1">{order.contact_phone}</span>
+                        <span className="text-[10px] font-medium text-gray-500 uppercase tracking-tight line-clamp-1 italic">
+                          {order.city}, {order.postal_code}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-8">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-brand-green">LKR {order.total_amount?.toLocaleString()}</span>
+                        <span className="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
+                          {order.items?.length} Items
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-8">
+                      <div className="flex flex-col space-y-2">
+                        <select 
+                          value={order.status}
+                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                          className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border focus:outline-none transition-all ${getStatusColor(order.status)}`}
+                        >
+                          <option value="pending" className="bg-brand-dark">Pending</option>
+                          <option value="processing" className="bg-brand-dark">Processing</option>
+                          <option value="shipped" className="bg-brand-dark">Shipped</option>
+                          <option value="delivered" className="bg-brand-dark">Delivered</option>
+                          <option value="cancelled" className="bg-brand-dark">Cancelled</option>
+                        </select>
+                        <input 
+                          type="text" 
+                          placeholder="Add Tracking #"
+                          value={order.tracking_number || ''}
+                          onChange={(e) => updateTrackingNumber(order.id, e.target.value)}
+                          className="bg-transparent border-b border-white/10 text-[10px] text-gray-400 py-1 focus:outline-none focus:border-brand-green/30"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-8 py-8 text-right">
+                      <button className="p-3 bg-white/5 border border-white/10 rounded-2xl text-gray-400 hover:text-white hover:bg-white/10 transition-all">
+                        <MoreVertical size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

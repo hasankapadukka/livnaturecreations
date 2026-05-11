@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ShoppingBag, Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingBag, Search, User, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import CartDrawer from './CartDrawer';
 
 import { useAuth } from '../context/AuthContext';
+import Logo from '../assets/Liv Nature Creations Logo.png';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,30 +46,42 @@ const Header = () => {
         </nav>
         
         {/* Centered Logo Block */}
-        <Link to="/" className="absolute left-1/2 top-0 transform -translate-x-1/2 bg-brand-dark text-white px-4 md:px-8 h-full flex flex-col justify-center items-center shadow-lg hover:bg-brand-green transition-colors min-w-[140px]">
-          <div className="flex flex-col items-center">
-            <span className="text-base md:text-[22px] font-bold tracking-[0.15em] md:tracking-[0.2em] font-heading leading-tight uppercase">LIV NATURE</span>
-            <span className="text-[8px] md:text-[10px] tracking-[0.3em] md:tracking-[0.4em] font-light opacity-80 uppercase">Creations</span>
-          </div>
+        <Link to="/" className="absolute left-1/2 top-0 -translate-x-1/2 h-full flex items-center justify-center z-20">
+          <img src={Logo} alt="Liv Nature Creations" className="h-[80%] md:h-[90%] w-auto object-contain" />
         </Link>
         
         <div className="flex items-center space-x-3 md:space-x-5 text-sm font-heading font-medium z-10">
-          <button className="hidden sm:block text-gray-800 hover:text-brand-green transition-colors"><Search size={18} strokeWidth={2.5} /></button>
-          <Link to="/contact" className="hidden lg:block hover:text-brand-green transition-colors">Contact</Link>
-          
-          <Link 
-            to="/cart"
-            className="flex bg-brand-dark text-white px-4 py-[10px] rounded-full items-center space-x-2 hover:bg-brand-green transition-all text-[10px] font-bold shadow-sm"
+          {/* Cart Trigger */}
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="flex bg-brand-dark text-white p-[10px] md:px-4 md:py-[10px] rounded-full items-center justify-center hover:bg-brand-green transition-all shadow-sm relative group"
           >
-            <ShoppingBag size={14} strokeWidth={2.5} className="mr-1"/>
-            <span className="hidden xl:inline">{cartCount} items in cart</span>
-            <span className="xl:hidden">{cartCount}</span>
-          </Link>
-
+            <ShoppingBag size={18} strokeWidth={2.5} className="md:mr-2"/>
+            <span className="hidden md:inline text-[10px] font-bold uppercase tracking-widest">{cartCount} items</span>
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand-green text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white md:hidden">
+                {cartCount}
+              </span>
+            )}
+          </button>
+          
+          {/* Account Link */}
           {user ? (
-            <Link to="/profile" className="bg-brand-dark text-white px-4 md:px-6 py-[10px] rounded-full hover:bg-brand-green transition-all transform hover:scale-105 shadow-md text-xs md:text-sm uppercase font-bold tracking-widest">My Account</Link>
+            <Link 
+              to="/profile" 
+              className="bg-brand-dark text-white p-[10px] md:px-6 md:py-[10px] rounded-full hover:bg-brand-green transition-all transform hover:scale-105 shadow-md flex items-center justify-center"
+            >
+              <User size={18} strokeWidth={2.5} className="md:mr-2" />
+              <span className="hidden md:inline text-[10px] font-bold uppercase tracking-widest">My Account</span>
+            </Link>
           ) : (
-            <Link to="/login" className="bg-brand-green text-white px-4 md:px-6 py-[10px] rounded-full hover:bg-brand-dark transition-all transform hover:scale-105 shadow-md text-xs md:text-sm font-bold uppercase tracking-widest">Sign In</Link>
+            <Link 
+              to="/login" 
+              className="bg-brand-dark text-white p-[10px] md:px-6 md:py-[10px] rounded-full hover:bg-brand-green transition-all transform hover:scale-105 shadow-md flex items-center justify-center"
+            >
+              <User size={18} strokeWidth={2.5} className="md:mr-2" />
+              <span className="hidden md:inline text-[10px] font-bold uppercase tracking-widest">Sign In</span>
+            </Link>
           )}
         </div>
 
@@ -76,10 +89,9 @@ const Header = () => {
         <div className={`fixed inset-0 bg-brand-dark z-[60] transition-transform duration-500 transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden`}>
           <div className="flex flex-col h-full p-8">
             <div className="flex justify-between items-center mb-12">
-               <div className="text-white">
-                 <span className="text-xl font-bold tracking-widest font-heading block">LIV NATURE</span>
-                 <span className="text-[10px] tracking-[0.4em] font-light opacity-60 uppercase">Creations</span>
-               </div>
+               <Link to="/" onClick={() => setIsMenuOpen(false)} className="h-12">
+                 <img src={Logo} alt="Liv Nature Creations" className="h-full w-auto object-contain brightness-0 invert" />
+               </Link>
                <button onClick={() => setIsMenuOpen(false)} className="text-white p-2">
                  <X size={32} />
                </button>

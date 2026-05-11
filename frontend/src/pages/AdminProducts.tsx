@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import { Product, Category } from '../types';
 import { 
   Plus, 
@@ -7,7 +8,6 @@ import {
   Edit2, 
   Trash2, 
   Package,
-  Eye,
   Loader2,
   X,
   Check,
@@ -32,25 +32,37 @@ const AdminProducts = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [prodRes, catRes] = await Promise.all([
-      supabase.from('products').select('*').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*')
-    ]);
-    
-    if (prodRes.data) setProducts(prodRes.data);
-    if (catRes.data) setCategories(catRes.data);
-    setLoading(false);
+    try {
+      const prodQuery = query(collection(db, 'products'), orderBy('created_at', 'desc'));
+      const [prodRes, catRes] = await Promise.all([
+        getDocs(prodQuery),
+        getDocs(collection(db, 'categories'))
+      ]);
+      
+      const prodList = prodRes.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+      const catList = catRes.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+      
+      setProducts(prodList);
+      setCategories(catList);
+    } catch (err) {
+      console.error('Error fetching admin products:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Confirm permanent deletion? This action cannot be undone.')) return;
     
     setActionLoading(true);
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) {
+    try {
+      await deleteDoc(doc(db, 'products', id));
       setProducts(products.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Error deleting product:', err);
+    } finally {
+      setActionLoading(false);
     }
-    setActionLoading(false);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -64,7 +76,6 @@ const AdminProducts = () => {
     setActionLoading(true);
     
     try {
-      // Clean up data before sending to Supabase
       const payload = {
         name: editingProduct.name,
         price: editingProduct.price,
@@ -73,24 +84,16 @@ const AdminProducts = () => {
         category_id: editingProduct.category_id,
         is_featured: editingProduct.is_featured || false,
         description: editingProduct.description,
-        stock_status: editingProduct.stock_status || 'instock'
+        stock_status: editingProduct.stock_status || 'instock',
+        updated_at: new Date(),
+        created_at: editingProduct.created_at || new Date()
       };
 
-      console.log('Sending payload to Supabase:', payload);
-      
       if (editingProduct?.id) {
-        const { error } = await supabase
-          .from('products')
-          .update(payload)
-          .eq('id', editingProduct.id);
-        
-        if (error) throw error;
+        const docRef = doc(db, 'products', editingProduct.id);
+        await updateDoc(docRef, payload as any);
       } else {
-        const { error } = await supabase
-          .from('products')
-          .insert([payload]);
-        
-        if (error) throw error;
+        await addDoc(collection(db, 'products'), payload);
       }
 
       setIsModalOpen(false);
@@ -98,7 +101,7 @@ const AdminProducts = () => {
       alert('SUCCESS: Asset has been integrated into the inventory.');
     } catch (error: any) {
       console.error('DATABASE ERROR:', error);
-      alert(`DATABASE REJECTION: ${error.message || error.details || 'Check console for details.'}`);
+      alert(`DATABASE REJECTION: ${error.message || 'Check console for details.'}`);
     } finally {
       setActionLoading(false);
     }
@@ -302,7 +305,7 @@ const AdminProducts = () => {
         </div>
       )}
 
-      {/* 3. Product Modal Redesign */}
+      {/* 3. Product Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
