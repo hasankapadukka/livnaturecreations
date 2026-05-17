@@ -125,7 +125,6 @@ const AdminProducts = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
             <input 
               type="text" 
-              placeholder="Search assets..."
               className="w-full sm:w-64 pl-12 pr-4 py-2.5 bg-white/5 border border-white/5 rounded-2xl focus:outline-none focus:border-brand-green/30 text-xs text-white placeholder:text-gray-600 transition-all shadow-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -347,7 +346,7 @@ const AdminProducts = () => {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Weight Unit</label>
-                    <input required type="text" className="w-full bg-white/5 border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-brand-green/30 transition-all shadow-inner" value={editingProduct?.unit || ''} onChange={(e) => setEditingProduct({...editingProduct, unit: e.target.value})} placeholder="e.g. 100g" />
+                    <input required type="text" className="w-full bg-white/5 border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-brand-green/30 transition-all shadow-inner" value={editingProduct?.unit || ''} onChange={(e) => setEditingProduct({...editingProduct, unit: e.target.value})} />
                   </div>
                 </div>
 

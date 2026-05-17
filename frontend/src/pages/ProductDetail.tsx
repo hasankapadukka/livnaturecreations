@@ -13,10 +13,17 @@ import {
   MessageSquare,
   ChevronRight
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import SEO from '../components/SEO';
 
 import { useCart } from '../context/CartContext';
 import { Minus, Plus as PlusIcon } from 'lucide-react';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+};
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -88,6 +95,11 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-warm-white pt-32 pb-20 px-4">
+      <SEO 
+        title={product.name} 
+        description={product.description || `Premium quality ${product.name} from Liv Nature Creations. Hygienically cleaned and packed for the best experience.`}
+        keywords={`${product.name}, ${categoryName}, Sri Lankan food, premium agro-product, Liv Nature`}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <nav className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-12">
@@ -115,7 +127,7 @@ const ProductDetail = () => {
             
             {product.is_featured && (
               <div className="absolute top-8 left-8 bg-brand-gold text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">
-                Exclusive Choice
+                Top Quality
               </div>
             )}
           </motion.div>
@@ -126,7 +138,7 @@ const ProductDetail = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col h-full"
           >
-            <div className="mb-8">
+            <motion.div {...fadeInUp} className="mb-8">
               <p className="text-brand-green font-bold text-xs uppercase tracking-[0.3em] mb-4">
                 {categoryName}
               </p>
@@ -136,13 +148,13 @@ const ProductDetail = () => {
               <div className="flex items-center space-x-6">
                 <span className="text-3xl font-bold text-brand-dark">LKR {product.price?.toLocaleString()}</span>
                 <span className="px-4 py-1.5 bg-brand-green/10 text-brand-green rounded-full text-[10px] font-bold uppercase tracking-widest">
-                  {product.unit || 'Per Unit'}
+                  {product.unit || 'For one'}
                 </span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Quantity Selector */}
-            <div className="flex items-center space-x-6 mb-10">
+            <motion.div {...fadeInUp} transition={{ delay: 0.1 }} className="flex items-center space-x-6 mb-10">
               <div className="flex items-center bg-white border border-gray-100 rounded-2xl p-1 shadow-sm">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -159,16 +171,16 @@ const ProductDetail = () => {
                 </button>
               </div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Quantity</p>
-            </div>
+            </motion.div>
 
             {/* Status Grid */}
-            <div className="grid grid-cols-2 gap-4 mb-10">
+            <motion.div {...fadeInUp} transition={{ delay: 0.2 }} className="grid grid-cols-2 gap-4 mb-10">
               <div className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center space-x-4">
                 <div className="w-10 h-10 bg-brand-green/10 rounded-xl flex items-center justify-center text-brand-green">
                   <Check size={20} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">In Stock?</p>
                   <p className="text-sm font-bold text-brand-dark uppercase tracking-tighter">
                     {product.stock_status === 'instock' ? 'In Stock' : 'Pre-Order Only'}
                   </p>
@@ -179,14 +191,14 @@ const ProductDetail = () => {
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quality</p>
-                  <p className="text-sm font-bold text-brand-dark uppercase tracking-tighter">Export Grade</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Grade</p>
+                  <p className="text-sm font-bold text-brand-dark uppercase tracking-tighter">High Quality</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Actions */}
-            <div className="space-y-4 mb-12">
+            <motion.div {...fadeInUp} transition={{ delay: 0.3 }} className="space-y-4 mb-12">
               <button 
                 onClick={handleAddToCart}
                 disabled={added}
@@ -195,7 +207,7 @@ const ProductDetail = () => {
                 }`}
               >
                 <ShoppingBag size={20} className={added ? '' : 'group-hover:scale-110 transition-transform'} />
-                <span>{added ? 'Added to Cart' : 'Add to Shopping Cart'}</span>
+                <span>{added ? 'Added to Cart' : 'Add to Cart'}</span>
               </button>
               
               <div className="grid grid-cols-2 gap-4">
@@ -214,10 +226,10 @@ const ProductDetail = () => {
                   <span>Export</span>
                 </Link>
               </div>
-            </div>
+            </motion.div>
 
             {/* Tabs */}
-            <div className="mb-12">
+            <motion.div {...fadeInUp} transition={{ delay: 0.4 }} className="mb-12">
               <div className="flex space-x-8 border-b border-gray-100 mb-8">
                 {['description', 'specifications'].map((tab) => (
                   <button
@@ -238,7 +250,7 @@ const ProductDetail = () => {
               <div className="min-h-[100px]">
                 {activeTab === 'description' ? (
                   <p className="text-gray-600 leading-relaxed text-sm md:text-base italic">
-                    {product.description || "Indulge in the purest essence of nature with this meticulously crafted creation. Sourced directly from our lush plantations, it represents the pinnacle of Sri Lankan quality."}
+                    {product.description || "Experience the best of nature with our high-quality products, sourced directly from Sri Lankan plantations."}
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 gap-2">
@@ -255,21 +267,21 @@ const ProductDetail = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 mt-12 pt-12 border-t border-gray-100">
+            <motion.div {...fadeInUp} transition={{ delay: 0.5 }} className="grid grid-cols-3 gap-4 mt-12 pt-12 border-t border-gray-100">
                {[
-                 { icon: <Truck size={18} />, label: 'Global Shipping' },
-                 { icon: <ShieldCheck size={18} />, label: 'Secure Sourcing' },
-                 { icon: <Clock size={18} />, label: 'Freshness Guaranteed' }
+                 { icon: <Truck size={18} />, label: 'Island-wide Delivery' },
+                 { icon: <ShieldCheck size={18} />, label: 'Safe to Use' },
+                 { icon: <Clock size={18} />, label: 'Always Fresh' }
                ].map((badge, i) => (
                  <div key={i} className="flex flex-col items-center text-center">
                     <div className="text-brand-green mb-2">{badge.icon}</div>
                     <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{badge.label}</span>
                  </div>
                ))}
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

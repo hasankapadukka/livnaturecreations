@@ -104,7 +104,6 @@ const AdminOrders = () => {
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
           <input 
             type="text" 
-            placeholder="Search by Order ID or Phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-full pl-14 pr-8 py-4 text-sm text-white focus:outline-none focus:border-brand-green/30"
@@ -204,7 +203,6 @@ const AdminOrders = () => {
                         </select>
                         <input 
                           type="text" 
-                          placeholder="Add Tracking #"
                           value={order.tracking_number || ''}
                           onChange={(e) => updateTrackingNumber(order.id, e.target.value)}
                           className="bg-transparent border-b border-white/10 text-[10px] text-gray-400 py-1 focus:outline-none focus:border-brand-green/30"

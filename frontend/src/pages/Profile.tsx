@@ -213,7 +213,6 @@ const Profile = () => {
                           type="text" 
                           value={profile?.phone_number || ''}
                           onChange={(e) => setProfile({...profile!, phone_number: e.target.value})}
-                          placeholder="+94 7X XXX XXXX"
                           className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-16 pr-8 py-4 text-sm focus:outline-none focus:border-brand-green/30 transition-all"
                         />
                       </div>
@@ -228,7 +227,6 @@ const Profile = () => {
                         rows={3}
                         value={profile?.shipping_address || ''}
                         onChange={(e) => setProfile({...profile!, shipping_address: e.target.value})}
-                        placeholder="Street address, apartment, suite..."
                         className="w-full bg-gray-50 border border-gray-100 rounded-[32px] pl-16 pr-8 py-6 text-sm focus:outline-none focus:border-brand-green/30 transition-all resize-none shadow-inner"
                       />
                     </div>

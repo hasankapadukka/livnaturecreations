@@ -21,7 +21,9 @@ const AdminDashboard = () => {
     inquiries: 0,
     orders: 0
   });
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastSync, setLastSync] = useState<string>('');
 
   useEffect(() => {
     fetchStats();
@@ -36,11 +38,16 @@ const AdminDashboard = () => {
         getDocs(collection(db, 'orders'))
       ]);
 
+      const products = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      const lowStock = products.filter(p => p.stock_status === 'outofstock');
+      
+      setLowStockProducts(lowStock);
       setCounts({
         products: prodSnap.size,
         inquiries: inqSnap.size,
         orders: orderSnap.size
       });
+      setLastSync(new Date().toLocaleTimeString());
     } catch (err) {
       console.error('Error fetching admin stats:', err);
     } finally {
@@ -103,10 +110,18 @@ const AdminDashboard = () => {
       </div>
 
       {/* 3. Action Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/5 p-10 rounded-[50px]">
-          <h3 className="text-2xl font-bold font-serif text-white mb-8">Management Controls</h3>
-          <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/5 p-10 rounded-[50px]">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold font-serif text-white">Management Controls</h3>
+            {lowStockProducts.length > 0 && (
+              <div className="flex items-center space-x-2 bg-red-500/10 text-red-400 px-4 py-2 rounded-full border border-red-500/20 animate-pulse">
+                <AlertCircle size={14} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{lowStockProducts.length} Items Out of Stock</span>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <Link to="/admin/products" className="group bg-brand-green p-8 rounded-[32px] text-white transition-all hover:bg-brand-dark border border-brand-green/50 flex flex-col justify-between h-48 shadow-lg shadow-brand-green/10">
               <Package size={32} className="opacity-40" />
               <div>
@@ -129,9 +144,43 @@ const AdminDashboard = () => {
               <CheckCircle2 size={40} />
             </div>
             <h3 className="text-2xl font-bold font-serif text-white mb-2">System Integrity</h3>
-            <p className="text-gray-500 text-sm max-w-xs">All Firebase services are operational. Data parity with Firestore is verified.</p>
+            <p className="text-gray-500 text-sm max-w-xs mb-6">All Firebase services are operational. Data parity with Firestore is verified.</p>
+            <div className="flex items-center space-x-2 text-[10px] font-bold text-brand-green uppercase tracking-widest bg-brand-green/5 px-4 py-2 rounded-xl">
+              <Clock size={12} />
+              <span>Last Sync: {lastSync || '...'}</span>
+            </div>
         </div>
       </div>
+
+      {/* 4. Low Stock Monitor (Conditional) */}
+      {lowStockProducts.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/5 border border-red-500/10 p-10 rounded-[50px]"
+        >
+          <div className="flex items-center space-x-4 mb-8">
+            <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500">
+              <AlertCircle size={24} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold font-serif text-white leading-tight">Critical Alerts</h3>
+              <p className="text-[10px] font-bold text-red-500/60 uppercase tracking-widest">Inventory depletion detected</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {lowStockProducts.map(p => (
+              <div key={p.id} className="bg-white/5 border border-white/5 p-6 rounded-3xl flex items-center space-x-4">
+                <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                <div className="overflow-hidden">
+                  <p className="text-sm font-bold text-white truncate">{p.name}</p>
+                  <p className="text-[8px] font-bold text-red-400 uppercase tracking-widest">Out of Stock</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

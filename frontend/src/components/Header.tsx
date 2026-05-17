@@ -43,6 +43,7 @@ const Header = () => {
           <Link to="/shop" className="hover:text-brand-green transition-colors">Shop</Link>
           <Link to="/export" className="hover:text-brand-green transition-colors">Export</Link>
           <Link to="/about" className="hover:text-brand-green transition-colors">About</Link>
+          <Link to="/contact" className="hover:text-brand-green transition-colors">Contact</Link>
         </nav>
         
         {/* Centered Logo Block */}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Target, Eye, ShieldCheck, Heart, Users, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import SEO from '../components/SEO';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -21,6 +22,11 @@ const staggerContainer = {
 const About = () => {
   return (
     <div className="bg-warm-white">
+      <SEO 
+        title="About Us" 
+        description="Learn about Liv Nature Creations (Pvt) Ltd, a leading Sri Lankan agro-processing company dedicated to purity, quality, and sustainable value addition in the food industry."
+        keywords="about Liv Nature, agro-processing company, Sri Lankan food exports, hygienic food packing, Liv Nature story"
+      />
       {/* Hero Section */}
       <section className="relative h-[350px] md:h-[500px] flex items-center justify-center overflow-hidden">
         <motion.div 

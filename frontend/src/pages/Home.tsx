@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { collection, getDocs, query, where, limit, addDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { Category, Product } from '../types';
+import SEO from '../components/SEO';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -82,6 +83,11 @@ const Home = () => {
 
   return (
     <div className="bg-warm-white">
+      <SEO 
+        title="Home" 
+        description="Liv Nature Creations brings high-quality Sri Lankan food products directly to you, cleaned and packed with care. Spices, pulses, and agro-products processed to export standards."
+        keywords="Sri Lankan spices, premium pulses, agro processing, Liv Nature Creations, export quality spices"
+      />
       {/* 1. Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-4 md:px-8">
         <motion.div
@@ -113,7 +119,7 @@ const Home = () => {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold font-serif text-white mb-6 md:mb-10 leading-[1.1] tracking-tight"
           >
-            Transforming <span className="text-brand-gold italic">Nature</span> <br className="hidden md:block" /> into Value
+            From <span className="text-brand-gold italic">Nature</span> <br className="hidden md:block" /> to Your Home
           </motion.h1>
 
           <motion.p
@@ -122,7 +128,7 @@ const Home = () => {
             transition={{ delay: 0.6, duration: 1 }}
             className="text-sm md:text-xl text-white/80 max-w-2xl mx-auto mb-8 md:mb-12 font-medium leading-relaxed px-4"
           >
-            Liv Nature Creations is a Sri Lanka-based powerhouse, transforming bulk food commodities into hygienically packed, premium branded products for local and global markets.
+            Liv Nature Creations brings high-quality Sri Lankan food products directly to you, cleaned and packed with care.
           </motion.p>
 
           <motion.div
@@ -133,12 +139,12 @@ const Home = () => {
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
               <Link to="/products" className="w-full sm:w-auto bg-brand-green text-white px-8 md:px-12 py-4 md:py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-brand-dark transition-all shadow-2xl block text-center">
-                Shop Products
+                Shop Now
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
               <Link to="/export" className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/30 px-8 md:px-12 py-4 md:py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-brand-dark transition-all block text-center">
-                Export Enquiries
+                Bulk Orders
               </Link>
             </motion.div>
           </motion.div>
@@ -161,7 +167,7 @@ const Home = () => {
       >
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-16 gap-4">
           <div className="max-w-xl">
-            <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark mb-4 md:mb-6">Explore Our Range</h2>
+            <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark mb-4 md:mb-6">Our Products</h2>
             <p className="text-gray-500 font-medium leading-relaxed">From essential pulses to aromatic spices, we bring the best of nature to your kitchen.</p>
           </div>
           <Link to="/products" className="group text-brand-green font-bold text-xs tracking-widest uppercase flex items-center">
@@ -216,8 +222,8 @@ const Home = () => {
             {...fadeInUp}
             className="text-center mb-16 md:mb-24"
           >
-            <span className="text-brand-gold text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase block mb-4 md:mb-6">The Liv Nature Difference</span>
-            <h2 className="text-3xl md:text-6xl font-bold font-serif leading-tight">Why Industry Leaders <br /> Trust Our Products</h2>
+            <span className="text-brand-gold text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase block mb-4 md:mb-6">Why Choose Us</span>
+            <h2 className="text-3xl md:text-6xl font-bold font-serif leading-tight">Why You Can Trust <br /> Our Products</h2>
           </motion.div>
 
           <motion.div
@@ -229,7 +235,7 @@ const Home = () => {
           >
             {[
               { icon: <ShieldCheck size={32} />, title: 'Hygienically Packed', desc: 'State-of-the-art cleaning and packaging systems ensure zero contamination and long shelf life.' },
-              { icon: <Zap size={32} />, title: 'Value Addition', desc: 'We bridge the gap between bulk imports and premium, consumer-ready retail products.' },
+              { icon: <Zap size={32} />, title: 'Best Quality', desc: 'We provide top quality products, ready for your kitchen.' },
               { icon: <Award size={32} />, title: 'Export Quality', desc: 'Every product is processed to meet international standards for supermarkets and global retail.' }
             ].map((item, i) => (
               <motion.div
@@ -257,7 +263,7 @@ const Home = () => {
         className="py-12 md:py-24 px-4 md:px-8 max-w-[1400px] mx-auto"
       >
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 md:mb-20 gap-6">
-          <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark">Featured Products</h2>
+          <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark">Top Products</h2>
           <div className="flex space-x-4 md:space-x-8 text-[10px] md:text-xs font-bold tracking-widest uppercase overflow-x-auto no-scrollbar w-full md:w-auto pb-4 md:pb-0">
             {['All Products', 'Pulses', 'Spices', 'Grains'].map((filter, i) => (
               <motion.button
@@ -325,10 +331,10 @@ const Home = () => {
             <Globe className="text-brand-gold mb-6 md:mb-8" size={40} />
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold font-serif text-brand-dark mb-6 md:mb-8 leading-tight">Global Export Excellence</h2>
             <p className="text-gray-600 text-base md:text-lg mb-8 md:mb-12 font-medium leading-relaxed">
-              We specialize in bulk agro-processing and value-added packaging for international distributors and retail chains. Our facility is designed to meet global food safety standards.
+              We provide large orders for businesses and export to other countries, following high safety standards.
             </p>
             <Link to="/export" className="inline-flex items-center space-x-4 bg-brand-dark text-white px-10 md:px-12 py-4 md:py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl group">
-              <span>Export Portal</span>
+              <span>Bulk Orders</span>
               <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
             </Link>
           </div>
@@ -358,8 +364,8 @@ const Home = () => {
       {/* 7. Newsletter */}
       <section className="py-20 md:py-32 px-4">
         <div className="max-w-[1000px] mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark mb-6 md:mb-8">Stay Updated</h2>
-          <p className="text-gray-500 mb-10 md:mb-16 font-medium text-base md:text-lg">Subscribe to get updates on new product arrivals and export news.</p>
+          <h2 className="text-3xl md:text-5xl font-bold font-serif text-brand-dark mb-6 md:mb-8">Get News</h2>
+          <p className="text-gray-500 mb-10 md:mb-16 font-medium text-base md:text-lg">Sign up to hear about new products and special offers.</p>
           <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" onSubmit={handleSubscribe}>
             <input
               type="email"

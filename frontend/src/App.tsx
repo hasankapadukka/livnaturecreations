@@ -26,6 +26,7 @@ import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import TrackOrder from './pages/TrackOrder';
 import VerifyEmail from './pages/VerifyEmail';
+import OrderDetail from './pages/OrderDetail';
 
 // Placeholder components for other pages
 const Shop = () => <div className="py-20 text-center text-4xl font-serif">Shop Page Coming Soon</div>;
@@ -60,6 +61,7 @@ function AnimatedRoutes() {
         <Route element={<ProtectedRoute><Layout><AnimatedRoutesWrapper /></Layout></ProtectedRoute>}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetail />} />
         </Route>
 
         {/* Admin Routes (Private) - No Storefront Layout */}

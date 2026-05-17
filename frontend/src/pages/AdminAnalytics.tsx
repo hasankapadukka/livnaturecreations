@@ -33,6 +33,8 @@ const AdminAnalytics = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const [popularProducts, setPopularProducts] = useState<{name: string, count: number}[]>([]);
+
   useEffect(() => {
     fetchAnalytics();
   }, []);
@@ -47,6 +49,7 @@ const AdminAnalytics = () => {
 
       let revenue = 0;
       const statusCounts = { pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
+      const productCounts: { [key: string]: number } = {};
 
       orderSnap.forEach(doc => {
         const data = doc.data();
@@ -55,7 +58,22 @@ const AdminAnalytics = () => {
         if (statusCounts[status] !== undefined) {
           statusCounts[status]++;
         }
+
+        // Track popular products
+        if (data.items && Array.isArray(data.items)) {
+          data.items.forEach((item: any) => {
+            productCounts[item.name] = (productCounts[item.name] || 0) + (item.quantity || 1);
+          });
+        }
       });
+
+      // Sort and get top 5
+      const sortedProducts = Object.entries(productCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      setPopularProducts(sortedProducts);
 
       setAnalytics({
         totalRevenue: revenue,
@@ -84,10 +102,11 @@ const AdminAnalytics = () => {
         </header>
 
         {/* Top Row: Core Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           {[
             { label: 'Total Revenue', value: `LKR ${analytics.totalRevenue.toLocaleString()}`, unit: 'Gross', change: 'Lifetime cumulative', icon: <DollarSign size={16} />, color: 'text-brand-green' },
             { label: 'Total Acquisitions', value: analytics.totalOrders.toString(), unit: 'Orders', change: 'Across all statuses', icon: <ShoppingCart size={16} />, color: 'text-brand-gold' },
+            { label: 'Average Order', value: `LKR ${analytics.totalOrders > 0 ? Math.round(analytics.totalRevenue / analytics.totalOrders).toLocaleString() : 0}`, unit: 'AOV', change: 'Value per acquisition', icon: <TrendingUp size={16} />, color: 'text-purple-400' },
             { label: 'Inventory Assets', value: analytics.totalProducts.toString(), unit: 'Items', change: 'Catalog depth', icon: <Package size={16} />, color: 'text-blue-400' },
           ].map((stat, i) => (
             <div key={i} className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col justify-between h-48">
@@ -95,15 +114,15 @@ const AdminAnalytics = () => {
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
                   <div className="flex items-baseline space-x-1">
-                    <span className="text-2xl font-bold text-[#0A261D]">{loading ? '...' : stat.value}</span>
-                    <span className="text-xs font-bold text-gray-400">{stat.unit}</span>
+                    <span className="text-xl font-bold text-[#0A261D]">{loading ? '...' : stat.value}</span>
+                    <span className="text-[10px] font-bold text-gray-400">{stat.unit}</span>
                   </div>
                 </div>
                 <div className={`p-3 rounded-xl bg-gray-50 ${stat.color}`}>
                   {stat.icon}
                 </div>
               </div>
-              <p className="text-[10px] font-medium text-gray-400 italic">
+              <p className="text-[9px] font-medium text-gray-400 italic">
                 {stat.change}
               </p>
             </div>
@@ -180,31 +199,53 @@ const AdminAnalytics = () => {
           </div>
         </div>
 
-        {/* Bottom Row: Market Distribution Placeholder */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-[#0A261D] p-8 rounded-[40px] shadow-2xl flex items-center space-x-6">
-             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-gold">
-                <Globe2 size={32} />
+        {/* Bottom Row: Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
+             <div className="flex items-center justify-between mb-8">
+               <h4 className="text-[#0A261D] font-bold text-sm uppercase tracking-widest">Top Selling Artifacts</h4>
+               <TrendingUp size={16} className="text-brand-green" />
              </div>
-             <div>
-                <h4 className="text-white font-bold text-sm mb-1">Export Market Reach</h4>
-                <p className="text-[10px] text-gray-400 leading-tight">Global distribution tracking via export inquiry module</p>
+             <div className="space-y-4">
+                {popularProducts.map((prod, i) => (
+                  <div key={i} className="flex justify-between items-center group">
+                    <div className="flex items-center space-x-4">
+                       <span className="text-[10px] font-bold text-gray-300">0{i+1}</span>
+                       <span className="text-xs font-bold text-brand-dark group-hover:text-brand-green transition-colors">{prod.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                       <div className="w-24 bg-gray-50 h-1.5 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(prod.count / popularProducts[0].count) * 100}%` }}
+                            className="h-full bg-brand-green" 
+                          />
+                       </div>
+                       <span className="text-[10px] font-bold text-brand-dark">{prod.count}</span>
+                    </div>
+                  </div>
+                ))}
+                {popularProducts.length === 0 && (
+                  <p className="text-[10px] text-gray-400 italic py-4">No acquisition data available yet.</p>
+                )}
              </div>
           </div>
 
-          <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex items-center space-x-6">
-             <div className="w-16 h-16 bg-brand-green/10 rounded-2xl flex items-center justify-center text-brand-green">
-                <Users2 size={32} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             <div className="bg-[#0A261D] p-8 rounded-[40px] shadow-2xl flex flex-col justify-between">
+                <Globe2 size={32} className="text-brand-gold" />
+                <div>
+                   <h4 className="text-white font-bold text-sm mb-1">Global Logistics</h4>
+                   <p className="text-[10px] text-gray-400 leading-tight">Export tracking protocol active</p>
+                </div>
              </div>
-             <div>
-                <h4 className="text-[#0A261D] font-bold text-sm mb-1">Customer Collective</h4>
-                <p className="text-[10px] text-gray-400 leading-tight">Growing network of nature-conscious consumers</p>
+             <div className="bg-brand-green p-8 rounded-[40px] shadow-2xl flex flex-col justify-between text-white">
+                <Users2 size={32} className="text-white" />
+                <div>
+                   <h4 className="font-bold text-sm mb-1">Customer network</h4>
+                   <p className="text-[10px] text-white/60 leading-tight">Active session parity high</p>
+                </div>
              </div>
-          </div>
-
-          <div className="bg-brand-green p-8 rounded-[40px] shadow-2xl flex flex-col justify-center">
-             <h4 className="text-white font-bold text-lg leading-tight">Registry Integrity Active</h4>
-             <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-2">All data synchronized with Firestore</p>
           </div>
         </div>
       </main>

@@ -19,10 +19,10 @@ const Cart = () => {
           <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-gray-200 mx-auto mb-8">
             <ShoppingCart size={48} />
           </div>
-          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4">Your collection is empty</h1>
-          <p className="text-gray-400 mb-12 font-medium">The purest nature creations are waiting to be identified by you.</p>
+          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4">Your cart is empty</h1>
+          <p className="text-gray-400 mb-12 font-medium">Add some of our natural products to your cart to get started.</p>
           <Link to="/products" className="inline-block bg-brand-dark text-white px-12 py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl">
-            Explore Collection
+            Shop Now
           </Link>
         </div>
       </div>
@@ -37,8 +37,8 @@ const Cart = () => {
             <ShoppingBag size={24} />
           </div>
           <div>
-            <h1 className="text-4xl font-serif font-bold text-brand-dark">Your Selection</h1>
-            <p className="text-gray-400 text-sm font-medium mt-1">{cart.length} nature artifacts identified</p>
+            <h1 className="text-4xl font-serif font-bold text-brand-dark">My Shopping Cart</h1>
+            <p className="text-gray-400 text-sm font-medium mt-1">{cart.length} items in your cart</p>
           </div>
         </div>
 
@@ -110,13 +110,13 @@ const Cart = () => {
               
               <div className="space-y-6 mb-10 pb-8 border-b border-gray-100">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Subtotal valuation</span>
+                  <span className="text-gray-400 font-medium">Total Item Price</span>
                   <span className="text-brand-dark font-bold">LKR {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Logistics (Shipping)</span>
+                  <span className="text-gray-400 font-medium">Delivery Charge</span>
                   <span className={shipping === 0 ? "text-brand-green font-bold" : "text-brand-dark font-bold"}>
-                    {shipping === 0 ? "Complimentary" : `LKR ${shipping.toLocaleString()}`}
+                    {shipping === 0 ? "Free" : `LKR ${shipping.toLocaleString()}`}
                   </span>
                 </div>
                 {shipping > 0 && (
@@ -127,7 +127,7 @@ const Cart = () => {
               </div>
 
               <div className="flex justify-between items-center mb-12">
-                <span className="text-lg font-serif font-bold text-brand-dark">Grand Total</span>
+                <span className="text-lg font-serif font-bold text-brand-dark">Total Price</span>
                 <span className="text-3xl font-serif font-bold text-brand-green">LKR {total.toLocaleString()}</span>
               </div>
 

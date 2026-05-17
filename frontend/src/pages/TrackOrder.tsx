@@ -81,7 +81,6 @@ const TrackOrder = () => {
               type="text" 
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="Enter your Registry ID..."
               className="w-full bg-gray-50 border border-gray-100 rounded-full pl-20 pr-40 py-6 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
             />
             <button 
@@ -124,6 +123,9 @@ const TrackOrder = () => {
                   <div className="text-right">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Expected Arrival</p>
                     <p className="text-lg font-bold text-brand-green">3-5 Business Days</p>
+                    <p className="text-[8px] font-bold text-gray-300 uppercase tracking-widest mt-1">
+                      Last Update: {order.updated_at ? new Date(order.updated_at.seconds * 1000).toLocaleDateString() : 'Active'}
+                    </p>
                   </div>
                </div>
 

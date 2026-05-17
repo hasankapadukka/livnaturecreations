@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Clock, Send, Loader2, CheckCi
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../utils/firebase';
+import SEO from '../components/SEO';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -72,6 +73,11 @@ const Contact = () => {
 
   return (
     <div className="bg-warm-white pb-16 md:pb-24">
+      <SEO 
+        title="Contact Us" 
+        description="Get in touch with Liv Nature Creations. Have questions about our products or want to discuss a partnership? Reach out via our portal or WhatsApp."
+        keywords="contact Liv Nature, Sri Lankan spice inquiry, wholesale food contact, food processing partnership, customer support"
+      />
       {/* Header */}
       <section className="bg-brand-dark py-20 md:py-32 px-4 md:px-8 text-center text-white relative overflow-hidden">
         <motion.div 

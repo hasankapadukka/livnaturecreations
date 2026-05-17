@@ -42,7 +42,7 @@ const Orders = () => {
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!window.confirm('Are you certain you wish to abort this acquisition?')) return;
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
     
     setCancellingId(orderId);
     try {
@@ -58,11 +58,11 @@ const Orders = () => {
 
   const getStatusDetails = (status: string) => {
     switch (status) {
-      case 'pending': return { icon: <Clock size={16} />, color: 'bg-amber-50 text-amber-600', label: 'Pending Acceptance' };
+      case 'pending': return { icon: <Clock size={16} />, color: 'bg-amber-50 text-amber-600', label: 'Waiting for Confirm' };
       case 'processing': return { icon: <Loader2 size={16} className="animate-spin" />, color: 'bg-blue-50 text-blue-600', label: 'In Preparation' };
       case 'shipped': return { icon: <Truck size={16} />, color: 'bg-purple-50 text-purple-600', label: 'In Transit' };
       case 'delivered': return { icon: <CheckCircle2 size={16} />, color: 'bg-green-50 text-green-600', label: 'Successfully Delivered' };
-      case 'cancelled': return { icon: <XCircle size={16} />, color: 'bg-red-50 text-red-600', label: 'Acquisition Cancelled' };
+      case 'cancelled': return { icon: <XCircle size={16} />, color: 'bg-red-50 text-red-600', label: 'Order Cancelled' };
       default: return { icon: <Clock size={16} />, color: 'bg-gray-50 text-gray-600', label: status };
     }
   };
@@ -84,13 +84,13 @@ const Orders = () => {
               <ArrowLeft size={24} />
             </Link>
             <div>
-              <h1 className="text-4xl font-serif font-bold text-brand-dark">Order History</h1>
-              <p className="text-gray-400 text-sm font-medium mt-1">Review your nature acquisition records</p>
+              <h1 className="text-4xl font-serif font-bold text-brand-dark">My Orders</h1>
+              <p className="text-gray-400 text-sm font-medium mt-1">Check your past orders</p>
             </div>
           </div>
           <Link to="/track-order" className="flex items-center space-x-3 bg-white px-8 py-4 rounded-2xl shadow-lg border border-gray-100 text-brand-dark font-bold text-xs uppercase tracking-widest hover:bg-brand-green hover:text-white transition-all group">
             <Search size={18} className="text-brand-green group-hover:text-white" />
-            <span>Track specific Order</span>
+            <span>Track Order</span>
           </Link>
         </div>
 
@@ -99,8 +99,8 @@ const Orders = () => {
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-8">
               <Package size={40} />
             </div>
-            <h3 className="text-2xl font-serif font-bold text-brand-dark mb-4">No acquisitions found</h3>
-            <p className="text-gray-400 mb-10 max-w-md mx-auto">Your nature collective journey hasn't started yet. Explore our products to begin.</p>
+            <h3 className="text-2xl font-serif font-bold text-brand-dark mb-4">No orders found</h3>
+            <p className="text-gray-400 mb-10 max-w-md mx-auto">You haven't ordered anything yet. Browse our products to start.</p>
             <Link to="/products" className="inline-block bg-brand-dark text-white px-12 py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:bg-brand-green transition-all shadow-xl">
               Start Shopping
             </Link>
@@ -124,18 +124,18 @@ const Orders = () => {
                         <Package size={24} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Reference</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</p>
                         <p className="text-sm font-bold text-brand-dark uppercase tracking-widest">#{order.id.slice(0, 8)}</p>
                       </div>
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-6">
                       <div className="text-left md:text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Acquired On</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Date</p>
                         <p className="text-sm font-bold text-brand-dark">{new Date(order.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       </div>
                       <div className="text-left md:text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Valuation</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Price</p>
                         <p className="text-sm font-bold text-brand-green">LKR {order.total_amount.toLocaleString()}</p>
                       </div>
                       <div className={`flex items-center space-x-2 px-5 py-3 rounded-full ${status.color}`}>
@@ -149,7 +149,7 @@ const Orders = () => {
                   <div className="p-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                       <div className="space-y-6">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Acquired Artifacts</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Items Ordered</p>
                         <div className="space-y-4">
                           {order.items?.map((item: any, idx: number) => (
                             <div key={idx} className="flex items-center space-x-4">
@@ -167,7 +167,7 @@ const Orders = () => {
 
                       <div className="bg-gray-50/50 rounded-[32px] p-8 border border-gray-100 flex flex-col justify-between">
                         <div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Logistics Target</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Delivery Address</p>
                           <div className="flex items-start space-x-3 text-gray-500">
                              <Truck size={16} className="mt-1 flex-shrink-0" />
                              <p className="text-xs font-medium leading-relaxed italic">"{order.shipping_address}, {order.city}"</p>
@@ -176,7 +176,7 @@ const Orders = () => {
                         
                         {order.tracking_number && (
                           <div className="mt-8 pt-8 border-t border-gray-200">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tracking Protocol</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tracking Number</p>
                             <p className="text-sm font-bold text-brand-dark uppercase tracking-widest">{order.tracking_number}</p>
                           </div>
                         )}
@@ -189,20 +189,20 @@ const Orders = () => {
                               className="w-full flex items-center justify-center space-x-2 text-red-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-[0.2em] transition-all bg-red-50/50 py-4 rounded-2xl border border-red-100/50"
                              >
                                {cancellingId === order.id ? <Loader2 size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
-                               <span>Abort Acquisition</span>
+                               <span>Cancel Order</span>
                              </button>
                           </div>
                         )}
 
-                        <div className="mt-8">
-                           <Link 
-                            to={`/track-order?id=${order.id}`}
-                            className="flex items-center justify-between w-full bg-white border border-gray-100 px-6 py-4 rounded-2xl text-[10px] font-bold text-brand-dark uppercase tracking-widest hover:border-brand-green hover:text-brand-green transition-all"
-                           >
-                             <span>Detailed Tracking Status</span>
-                             <ChevronRight size={16} />
-                           </Link>
-                        </div>
+                         <div className="mt-8">
+                            <Link 
+                             to={`/orders/${order.id}`}
+                             className="flex items-center justify-between w-full bg-brand-dark text-white px-6 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-green transition-all shadow-lg"
+                            >
+                              <span>View Order Details</span>
+                              <ChevronRight size={16} />
+                            </Link>
+                         </div>
                       </div>
                     </div>
                   </div>

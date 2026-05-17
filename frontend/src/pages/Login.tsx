@@ -62,7 +62,6 @@ const Login = () => {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nature@example.com"
                 className="w-full bg-gray-50 border border-gray-100 rounded-3xl pl-16 pr-8 py-5 text-sm focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
               />
             </div>
@@ -77,7 +76,6 @@ const Login = () => {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
                 className="w-full bg-gray-50 border border-gray-100 rounded-3xl pl-16 pr-8 py-5 text-sm focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
               />
             </div>

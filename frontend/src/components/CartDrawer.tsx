@@ -38,7 +38,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center space-x-3">
                 <ShoppingBag className="text-brand-green" size={24} />
                 <div>
-                  <h2 className="text-xl font-bold text-brand-dark font-serif">Shopping Bag</h2>
+                  <h2 className="text-xl font-bold text-brand-dark font-serif">My Cart</h2>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{cartCount} items selected</p>
                 </div>
               </div>
@@ -58,14 +58,14 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     <ShoppingBag size={40} />
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-brand-dark">Your bag is empty</p>
-                    <p className="text-sm text-gray-400">Start adding nature's best creations to your collection.</p>
+                    <p className="text-lg font-bold text-brand-dark">Your cart is empty</p>
+                    <p className="text-sm text-gray-400">Add some products to your cart to get started.</p>
                   </div>
                   <button 
                     onClick={onClose}
                     className="mt-4 px-8 py-3 bg-brand-dark text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-brand-green transition-all"
                   >
-                    Explore Products
+                    Shop Products
                   </button>
                 </div>
               ) : (
@@ -120,7 +120,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             {cart.length > 0 && (
               <div className="p-6 md:p-8 bg-gray-50 border-t border-gray-100 space-y-6">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Total Valuation</span>
+                  <span className="text-gray-400 font-bold text-xs uppercase tracking-widest">Total Price</span>
                   <span className="text-2xl font-bold text-brand-dark font-serif">LKR {cartTotal.toLocaleString()}</span>
                 </div>
                 
@@ -130,7 +130,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     onClick={onClose}
                     className="flex items-center justify-center space-x-3 w-full bg-brand-green text-white py-5 rounded-[20px] text-xs font-bold uppercase tracking-[0.2em] hover:bg-brand-dark transition-all shadow-xl group"
                   >
-                    <span>Proceed to Checkout</span>
+                    <span>Go to Checkout</span>
                     <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
                   </Link>
                   <Link 
@@ -138,7 +138,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     onClick={onClose}
                     className="block text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-brand-dark transition-colors py-2"
                   >
-                    View Selection Details
+                    View Full Cart
                   </Link>
                   <p className="text-[9px] text-center text-gray-400 font-medium uppercase tracking-[0.1em]">
                     Free shipping on orders above LKR 5,000

@@ -73,20 +73,19 @@ const Checkout = () => {
     const totalValuation = cartTotal + shippingCost;
     const trackingUrl = `https://liv-nature-creations-99.web.app/track-order?id=${orderId}`;
     
-    const message = `*🌿 LIV NATURE CREATIONS - NEW ACQUISITION*%0A%0A` +
-      `*REGISTRY ID:* #${orderId?.slice(0, 8).toUpperCase()}%0A` +
-      `*STATUS:* PENDING CONFIRMATION%0A%0A` +
-      `*CUSTOMER DETAILS*%0A` +
-      `• Name: ${formData.full_name}%0A` +
-      `• Phone: ${formData.phone_number}%0A%0A` +
-      `*ARTIFACTS*%0A${itemsText}%0A%0A` +
-      `*VALUATION*%0A` +
+    const message = `*🌿 LIV NATURE CREATIONS - ORDER CONFIRMATION*%0A%0A` +
+      `Hello! I would like to confirm my order ID: *#${orderId?.slice(0, 8).toUpperCase()}*%0A%0A` +
+      `*📦 ORDER DETAILS*%0A${itemsText}%0A%0A` +
+      `*💰 FINANCIAL SUMMARY*%0A` +
       `• Subtotal: LKR ${cartTotal.toLocaleString()}%0A` +
-      `• Shipping: ${shippingCost === 0 ? 'COMPLIMENTARY' : 'LKR ' + shippingCost}%0A` +
-      `• *TOTAL: LKR ${totalValuation.toLocaleString()}*%0A%0A` +
-      `*DELIVERY TARGET*%0A${formData.shipping_address}, ${formData.city}%0A%0A` +
-      `*TRACK YOUR JOURNEY:*%0A${trackingUrl}%0A%0A` +
-      `_Please authorize this acquisition to initiate preparation._`;
+      `• Shipping: ${shippingCost === 0 ? 'FREE' : 'LKR ' + shippingCost}%0A` +
+      `• *Total Payable: LKR ${totalValuation.toLocaleString()}*%0A%0A` +
+      `*📍 DELIVERY TO*%0A` +
+      `• Name: ${formData.full_name}%0A` +
+      `• Address: ${formData.shipping_address}, ${formData.city}%0A` +
+      `• Phone: ${formData.phone_number}%0A%0A` +
+      `*🔗 TRACKING LINK*%0A${trackingUrl}%0A%0A` +
+      `_Thank you for choosing Liv Nature Creations!_`;
 
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
   };
@@ -156,20 +155,20 @@ const Checkout = () => {
             </motion.div>
           </div>
 
-          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4 relative z-10">Acquisition Logged</h1>
-          <p className="text-gray-500 mb-2 font-medium relative z-10">Your journey with Liv Nature has been successfully registered.</p>
+          <h1 className="text-4xl font-serif font-bold text-brand-dark mb-4 relative z-10">Order Successful</h1>
+          <p className="text-gray-500 mb-2 font-medium relative z-10">Your order has been placed successfully with Liv Nature.</p>
           <div className="bg-gray-50 rounded-2xl p-4 inline-block mb-12 relative z-10 border border-gray-100">
-             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2">Registry ID:</span>
+             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-2">Order ID:</span>
              <span className="text-xs font-bold text-brand-green uppercase tracking-widest">{orderId?.slice(0, 8)}</span>
           </div>
           
-          <div className="space-y-4 max-w-sm mx-auto relative z-10">
+          <div className="space-y-4 max-w-sm mx-auto relative z-10 mb-10">
             <button 
               onClick={handleWhatsAppConfirm}
               className="w-full bg-[#25D366] text-white py-5 rounded-full text-xs font-bold tracking-[0.2em] uppercase hover:opacity-90 transition-all shadow-xl flex items-center justify-center space-x-3 group"
             >
               <MessageSquare size={18} className="group-hover:scale-110 transition-transform" />
-              <span>Authorize via WhatsApp</span>
+              <span>Confirm via WhatsApp</span>
             </button>
             
             <div className="grid grid-cols-2 gap-4">
@@ -182,9 +181,28 @@ const Checkout = () => {
             </div>
           </div>
 
+          <div className="bg-brand-light/30 rounded-3xl p-8 text-left relative z-10 border border-brand-green/5">
+             <h4 className="text-[10px] font-bold text-brand-green uppercase tracking-[0.2em] mb-4">What's Next?</h4>
+             <div className="space-y-4">
+                {[
+                  { title: 'Confirm via WhatsApp', desc: 'Click the button above to send your order details to us.' },
+                  { title: 'Order Verification', desc: 'Our team will verify your details and start processing.' },
+                  { title: 'Dispatch & Tracking', desc: 'You will receive a tracking number once shipped.' }
+                ].map((step, i) => (
+                  <div key={i} className="flex space-x-4">
+                    <span className="text-xs font-bold text-brand-green">0{i+1}</span>
+                    <div>
+                      <p className="text-[11px] font-bold text-brand-dark">{step.title}</p>
+                      <p className="text-[10px] text-gray-500">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+             </div>
+          </div>
+
           <div className="mt-12 flex items-center justify-center space-x-3 opacity-30 relative z-10">
             <ShieldCheck size={14} />
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Secured Registry Entry</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em]">Secured Order Record</span>
           </div>
         </motion.div>
       </div>
@@ -198,7 +216,7 @@ const Checkout = () => {
           <Link to="/products" className="text-gray-400 hover:text-brand-dark transition-colors">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-4xl font-serif font-bold text-brand-dark">Complete Acquisition</h1>
+          <h1 className="text-4xl font-serif font-bold text-brand-dark">Checkout</h1>
         </div>
 
         <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-16">
@@ -211,42 +229,39 @@ const Checkout = () => {
                   <div className="w-10 h-10 bg-brand-green/10 rounded-xl flex items-center justify-center text-brand-green">
                     <MapPin size={20} />
                   </div>
-                  <h2 className="text-xl font-bold text-brand-dark font-serif">Shipping Registry</h2>
+                  <h2 className="text-xl font-bold text-brand-dark font-serif">Delivery Information</h2>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-3">
-                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Consignee Name</label>
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Full Name</label>
                    <input 
                     required 
                     type="text" 
                     value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    placeholder="Legal name for delivery"
                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-8 py-4 text-sm focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
                    />
                  </div>
                  <div className="space-y-3">
-                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Contact Protocol (Phone)</label>
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Phone Number</label>
                    <input 
                     required 
                     type="text" 
                     value={formData.phone_number}
                     onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                    placeholder="+94 7X XXX XXXX"
                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-8 py-4 text-sm focus:outline-none focus:border-brand-green/30 transition-all shadow-inner"
                    />
                  </div>
                </div>
 
                <div className="mt-8 space-y-3">
-                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Destination Address</label>
+                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-4">Street Address</label>
                  <textarea 
                   required 
                   rows={3}
                   value={formData.shipping_address}
                   onChange={(e) => setFormData({...formData, shipping_address: e.target.value})}
-                  placeholder="Precise location for delivery"
                   className="w-full bg-gray-50 border border-gray-100 rounded-[32px] px-8 py-6 text-sm focus:outline-none focus:border-brand-green/30 transition-all resize-none shadow-inner"
                  />
                </div>
@@ -281,7 +296,7 @@ const Checkout = () => {
                   <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
                     <CreditCard size={20} />
                   </div>
-                  <h2 className="text-xl font-bold text-brand-dark font-serif">Settlement Strategy</h2>
+                  <h2 className="text-xl font-bold text-brand-dark font-serif">Payment Method</h2>
                </div>
 
                <div className="space-y-4">
@@ -292,7 +307,7 @@ const Checkout = () => {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-brand-dark uppercase tracking-tight">Cash on Delivery</p>
-                        <p className="text-[10px] font-medium text-gray-400">Settle your valuation upon physical arrival</p>
+                        <p className="text-[10px] font-medium text-gray-400">Pay when you receive your order</p>
                       </div>
                     </div>
                     <input type="radio" className="hidden" checked={formData.payment_method === 'cod'} onChange={() => setFormData({...formData, payment_method: 'cod'})} />
@@ -314,7 +329,7 @@ const Checkout = () => {
           {/* Right: Summary */}
           <div className="lg:col-span-1">
             <div className="bg-brand-dark rounded-[40px] shadow-2xl p-10 text-white sticky top-32">
-               <h3 className="text-xl font-serif font-bold mb-8">Acquisition Summary</h3>
+               <h3 className="text-xl font-serif font-bold mb-8">Order Summary</h3>
                
                <div className="space-y-6 mb-10 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
                  {cart.map((item) => (
@@ -357,7 +372,7 @@ const Checkout = () => {
                >
                  {loading ? <Loader2 className="animate-spin" size={18} /> : (
                    <>
-                    <span>Commit Acquisition</span>
+                    <span>Place Order</span>
                     <ChevronRight size={18} />
                    </>
                  )}
@@ -365,7 +380,7 @@ const Checkout = () => {
 
                <div className="mt-8 flex items-center justify-center space-x-3 opacity-40">
                   <ShieldCheck size={14} />
-                  <span className="text-[9px] font-bold uppercase tracking-widest">Encrypted Checkout Protocol</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest">Secure Checkout</span>
                </div>
             </div>
           </div>

@@ -5,6 +5,13 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { Category, Product } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import SEO from '../components/SEO';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+};
 
 const Products = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,6 +56,11 @@ const Products = () => {
 
   return (
     <div className="bg-warm-white pb-16 md:pb-24">
+      <SEO 
+        title="Products" 
+        description="Explore our full range of premium agro-products. From spices and herbs to pulses and grains, discover hygienically packed ingredients from Sri Lanka."
+        keywords="spice catalog, pulse selection, Sri Lankan herbs, natural food products, Liv Nature catalog"
+      />
       {/* Header */}
       <section className="bg-brand-dark py-12 md:py-24 px-4 md:px-8 text-center text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center opacity-10"></div>
@@ -66,7 +78,7 @@ const Products = () => {
             transition={{ delay: 0.2 }}
             className="text-white/70 text-sm md:text-lg max-w-2xl mx-auto font-medium"
           >
-            Discover the purest ingredients, processed with care and delivered with integrity.
+            Discover nature's best ingredients, packed with care and delivered to you.
           </motion.p>
         </div>
       </section>
@@ -118,7 +130,7 @@ const Products = () => {
               <div className="w-16 h-16 border-4 border-brand-light rounded-full"></div>
               <div className="w-16 h-16 border-4 border-brand-green rounded-full border-t-transparent animate-spin absolute top-0 left-0"></div>
             </div>
-            <p className="text-brand-dark/40 font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Initializing Collection</p>
+            <p className="text-brand-dark/40 font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Loading Products</p>
           </div>
         ) : (
           <AnimatePresence mode="wait">
@@ -134,11 +146,11 @@ const Products = () => {
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 border-b border-gray-200 pb-8 gap-6">
                     <div className="max-w-xl">
                       <h2 className="text-3xl md:text-4xl font-bold font-serif text-brand-dark mb-4">{cat.name}</h2>
-                      <p className="text-gray-500 text-sm md:text-lg font-medium">Hygienically cleaned and packed premium selection.</p>
+                      <p className="text-gray-500 text-sm md:text-lg font-medium">Safe and clean packing for our premium products.</p>
                     </div>
                     <div className="flex items-center space-x-3 text-brand-green font-bold text-xs tracking-widest uppercase bg-brand-light px-6 py-3 rounded-2xl shadow-sm">
                        <CheckCircle2 size={16} />
-                       <span>Hygienically Packed</span>
+                       <span>Clean & Safe Packing</span>
                     </div>
                   </div>
 
@@ -168,12 +180,12 @@ const Products = () => {
       <section className="px-4 md:px-8 mt-12 md:mt-20">
         <div className="bg-brand-light/50 rounded-[40px] md:rounded-[80px] p-8 md:p-16 lg:p-20 flex flex-col lg:flex-row items-center justify-between gap-10 md:gap-12">
           <div className="max-w-2xl w-full">
-            <h2 className="text-2xl md:text-3xl font-bold font-serif text-brand-dark mb-6 md:mb-8">Uncompromising Quality Standards</h2>
+            <h2 className="text-2xl md:text-3xl font-bold font-serif text-brand-dark mb-6 md:mb-8">High Quality Standards</h2>
             <div className="space-y-4 md:space-y-6">
               {[
-                "Multiple rounds of cleaning and sorting to ensure 100% purity.",
-                "State-of-the-art packaging technology to preserve freshness and aroma.",
-                "Regular quality audits and laboratory testing for food safety."
+                "We clean and sort our products to make them 100% pure.",
+                "We use modern packing to keep products fresh and smelling good.",
+                "We test our food regularly to make sure it is safe."
               ].map((text, i) => (
                 <div key={i} className="flex items-start space-x-4">
                   <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-brand-green text-white flex items-center justify-center mt-1 shrink-0"><CheckCircle2 size={12} /></div>
@@ -187,7 +199,7 @@ const Products = () => {
                 <h4 className="text-brand-dark font-bold font-serif mb-2 text-lg">Bulk Orders?</h4>
                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">We provide special pricing for restaurants, retail chains, and distributors.</p>
                 <button className="text-brand-green font-bold text-xs uppercase tracking-widest flex items-center hover:translate-x-2 transition-transform">
-                  Enquire Now <Info size={14} className="ml-2"/>
+                  Ask for details <Info size={14} className="ml-2"/>
                 </button>
              </div>
           </div>
@@ -224,12 +236,12 @@ const ProductCard = ({ product }: { product: Product }) => {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      {...fadeInUp}
+      whileHover={{ y: -8 }}
       className="group"
     >
       <Link to={`/products/${product.id}`} className="block">
-        <div className="relative aspect-[4/5] rounded-[30px] md:rounded-[40px] overflow-hidden mb-6 bg-white shadow-xl">
+        <div className="relative aspect-[4/5] rounded-[30px] md:rounded-[40px] overflow-hidden mb-6 bg-white shadow-xl group-hover:shadow-2xl transition-all duration-500">
           <img 
             src={product.image_url || 'https://images.unsplash.com/photo-1559181567-c3190ca9959b?auto=format&fit=crop&q=80'} 
             alt={product.name} 
@@ -237,7 +249,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           />
           
           {/* Overlay Actions */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-brand-dark/20 transition-all duration-500 flex flex-col items-center justify-center gap-4">
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center gap-4">
              <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                <div className="bg-white text-brand-dark px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-2xl flex items-center space-x-2">
                   <span>View Details</span>

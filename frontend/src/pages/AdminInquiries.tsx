@@ -92,7 +92,6 @@ const AdminInquiries = () => {
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
             <input 
               type="text" 
-              placeholder="Search leads..."
               className="bg-white/5 border border-white/5 rounded-2xl pl-12 pr-6 py-3 text-xs text-white focus:outline-none focus:border-brand-green/30 w-64 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

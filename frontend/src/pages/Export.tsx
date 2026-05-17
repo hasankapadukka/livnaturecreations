@@ -3,6 +3,7 @@ import { Globe, ShieldCheck, Zap, Ship, BarChart3, MessageSquare, Send, Loader2,
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
+import SEO from '../components/SEO';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -68,6 +69,11 @@ const Export = () => {
 
   return (
     <div className="bg-warm-white">
+      <SEO 
+        title="Global Export Solutions" 
+        description="Liv Nature Creations provides premium Sri Lankan agro-products for international markets. Discuss bulk orders, private labeling, and global distribution partnerships."
+        keywords="agro export Sri Lanka, bulk spice orders, private label food products, international food distributor, export inquiry"
+      />
       {/* Hero Section */}
       <section className="bg-brand-dark py-20 md:py-32 px-4 md:px-8 text-center text-white relative overflow-hidden">
         <motion.div 

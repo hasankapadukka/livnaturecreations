@@ -42,16 +42,16 @@ export interface Order {
   contact_phone: string;
   tracking_number?: string;
   created_at: string;
-  order_items?: OrderItem[];
+  payment_method?: string;
+  items: OrderItem[];
 }
 
 export interface OrderItem {
-  id: string;
-  order_id: string;
   product_id: string;
+  name: string;
   quantity: number;
-  price_at_purchase: number;
-  product?: Product;
+  price: number;
+  unit: string;
 }
 
 export interface ContactInquiry {
