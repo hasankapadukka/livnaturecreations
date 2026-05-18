@@ -20,12 +20,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
 });
 
-// Only listen locally, do not listen on Vercel serverless environment
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-  });
-}
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
 
 export default app;
+
 
